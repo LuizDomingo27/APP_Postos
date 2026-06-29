@@ -393,7 +393,7 @@ def render_workshops_tab(df_filtered: pd.DataFrame, df_full: pd.DataFrame) -> No
         st.info("Não foi possível encontrar uma semana anterior para comparação.")
 
     st.markdown("""<br/><br/>""", unsafe_allow_html=True)
-    st.markdown("### 📋 Tabela Completa")
+    st.markdown("### Tabela Completa")
 
     # ── Tabela HTML completa (por oficina+MP) ─────────────────────────────
     agrupado = (

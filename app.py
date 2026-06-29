@@ -46,24 +46,7 @@ def _load_quality_report() -> dict:
 
 def _render_data_quality_notes() -> None:
     report = _load_quality_report()
-    with st.sidebar.expander("📋 Notas de qualidade dos dados"):
-        st.caption(
-            f"{report['linhas_totais']} linhas analisadas na planilha de origem."
-        )
-        st.caption(
-            f"Valores nulos tratados como 0: {report['qtd_efetivos_nulos']} em "
-            f"QTD Efetivos, {report['qtd_trabalhados_nulos']} em QTD Trabalhados."
-        )
-        if report["linhas_data_trabalhados_invalida"]:
-            st.caption(
-                f"'Data Trabalhados' inválida em {report['linhas_data_trabalhados_invalida']} "
-                f"linhas (Semana {report['semanas_afetadas_data_invalida']}). "
-                "O período mensal usado nos gráficos é sempre derivado de "
-                "'Data Efetivos', que é consistente em toda a base."
-            )
-        st.caption(
-            "Categorias de MP normalizadas: " + ", ".join(report["mp_variantes_brutas"])
-        )
+    
 
 
 def main() -> None:
