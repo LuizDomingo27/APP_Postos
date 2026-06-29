@@ -227,14 +227,14 @@ def _delta_cell(val_atual: float, val_ant: float, *, invert: bool = False) -> st
     Para absenteísmo usa diferença em pontos percentuais (p.p.).
     """
     if val_ant == 0 or val_ant != val_ant or val_atual != val_atual:
-        return '<td style="text-align:center;color:#8AA0A8;">—</td>'
+        return '<td style="text-align:center;color:#5E8B83;">—</td>'
 
     delta_pct = (val_atual - val_ant) / abs(val_ant) * 100
     up = delta_pct > 0
     # Sinal visual
     arrow = "▲" if up else "▼"
     # Cor: se invert, subida é ruim (vermelho), descida é boa (verde)
-    cor = ("#FF4C4C" if up else "#00FF87") if invert else ("#00FF87" if up else "#FF4C4C")
+    cor = ("#D93025" if up else "#18C99E") if invert else ("#18C99E" if up else "#D93025")
     sinal = "+" if up else ""
     return (
         f'<td style="text-align:center;color:{cor};font-weight:600;">'
@@ -249,11 +249,11 @@ def _delta_pp_cell(abs_atual: float, abs_ant: float) -> str:
     Subida = vermelho (piora), descida = verde (melhora).
     """
     if abs_ant != abs_ant or abs_atual != abs_atual:
-        return '<td style="text-align:center;color:#8AA0A8;">—</td>'
+        return '<td style="text-align:center;color:#5E8B83;">—</td>'
 
     delta = abs_atual - abs_ant
     arrow = "▲" if delta > 0 else "▼"
-    cor = "#FF4C4C" if delta > 0 else "#00FF87"
+    cor = "#D93025" if delta > 0 else "#18C99E"
     sinal = "+" if delta > 0 else ""
     return (
         f'<td style="text-align:center;color:{cor};font-weight:600;">'
@@ -298,7 +298,7 @@ def _render_table_comparacao(
             rows.append(
                 f'<tr>'
                 f'<td style="text-align:left;font-weight:600;">{mp}</td>'
-                f'<td colspan="4" style="text-align:center;color:#8AA0A8;font-style:italic;">{nota}</td>'
+                f'<td colspan="4" style="text-align:center;color:#5E8B83;font-style:italic;">{nota}</td>'
                 f'</tr>'
             )
             continue
@@ -321,10 +321,10 @@ def _render_table_comparacao(
         '<table class="custom-table">'
         '<thead><tr>'
         '<th style="text-align:left;">MP</th>'
-        f'<th style="text-align:center;">Δ Efetivos<br><small style="font-weight:400;color:#8AA0A8;">S{semana_ant}→S{semana_atual}</small></th>'
-        f'<th style="text-align:center;">Δ Trabalhados<br><small style="font-weight:400;color:#8AA0A8;">S{semana_ant}→S{semana_atual}</small></th>'
-        f'<th style="text-align:center;">Δ Ausências<br><small style="font-weight:400;color:#8AA0A8;">S{semana_ant}→S{semana_atual}</small></th>'
-        f'<th style="text-align:center;">Δ Absenteísmo<br><small style="font-weight:400;color:#8AA0A8;">S{semana_ant}→S{semana_atual}</small></th>'
+        f'<th style="text-align:center;">Δ Efetivos<br><small style="font-weight:400;color:#5E8B83;">S{semana_ant}→S{semana_atual}</small></th>'
+        f'<th style="text-align:center;">Δ Trabalhados<br><small style="font-weight:400;color:#5E8B83;">S{semana_ant}→S{semana_atual}</small></th>'
+        f'<th style="text-align:center;">Δ Ausências<br><small style="font-weight:400;color:#5E8B83;">S{semana_ant}→S{semana_atual}</small></th>'
+        f'<th style="text-align:center;">Δ Absenteísmo<br><small style="font-weight:400;color:#5E8B83;">S{semana_ant}→S{semana_atual}</small></th>'
         '</tr></thead>'
         f'<tbody>{"".join(rows)}</tbody>'
         '</table></div>'
@@ -431,8 +431,8 @@ def render_workshops_tab(df_filtered: pd.DataFrame, df_full: pd.DataFrame) -> No
         else:
             badge_class = "medium"
 
-        color_cont = "color: #00FF87; font-weight: 600;"
-        color_dem  = "color: #FF4C4C; font-weight: 600;"
+        color_cont = "color: #18C99E; font-weight: 600;"
+        color_dem  = "color: #D93025; font-weight: 600;"
 
         rows_html.append(
             f'<tr>'

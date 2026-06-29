@@ -1,0 +1,20 @@
+[global]
+# Silencia avisos de deprecação no terminal
+disableWidgetStateDuplicationWarning = true
+
+[server]
+headless = true
+enableCORS = false
+enableXsrfProtection = true
+
+[browser]
+gatherUsageStats = false
+
+[theme]
+# Tema claro — alinhado ao padrão visual do SO (light mode)
+base            = "light"
+primaryColor    = "#18C99E"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F0FDF9"
+textColor       = "#0D2B26"
+font            = "sans serif"

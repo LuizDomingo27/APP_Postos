@@ -25,8 +25,8 @@ import streamlit as st
 from core.config import Theme, Columns
 from core.utils import format_delta_br, format_int_br, format_percent_br, trend_color, safe_div
 
-_GREEN = "#00FF87"
-_RED   = "#FF4C4C"
+_GREEN = "#18C99E"
+_RED   = "#D93025"
 _MM_CURTO_COLOR = "#FBBF24"
 _MM_LONGO_COLOR = "#FB923C"
 _LAST_N_WEEKS = 4
@@ -172,8 +172,8 @@ def build_evolution_chart(
                 "height": 22,
                 "bottom": 10,
                 "borderColor": Theme.CARD_BORDER,
-                "backgroundColor": "#0B1014",
-                "fillerColor": "rgba(63,224,197,0.1)",
+                "backgroundColor": "#F0FDF9",
+                "fillerColor": "rgba(46,230,192,0.15)",
                 "handleStyle": {"color": Theme.ACCENT, "borderColor": Theme.ACCENT},
                 "moveHandleStyle": {"color": Theme.ACCENT},
                 "textStyle": {"color": Theme.TEXT_MUTED, "fontSize": 10},
@@ -195,13 +195,13 @@ def build_evolution_chart(
         "animationEasing": "cubicOut",
         "tooltip": {
             "trigger": "axis",
-            "backgroundColor": "rgba(8,18,24,0.96)",
-            "borderColor": "#1F3A44",
+            "backgroundColor": "rgba(255,255,255,0.97)",
+            "borderColor": "rgba(46,230,192,0.28)",
             "borderWidth": 1,
             "padding": [10, 14],
             "confine": True,
             "textStyle": {
-                "color": "#E8F1F0",
+                "color": "#0D2B26",
                 "fontFamily": "Inter, sans-serif",
                 "fontSize": 13,
             },
@@ -254,7 +254,7 @@ def build_evolution_chart(
             "itemWidth": 18,
             "itemHeight": 4,
             "selectedMode": True,
-            "inactiveColor": "#3A4A50",
+            "inactiveColor": "#B5D4CD",
         },
         "dataZoom": data_zoom,
         "grid": {
@@ -346,7 +346,7 @@ def build_evolution_chart(
                                 "fontWeight": "bold",
                                 "fontSize": 11,
                                 "fontFamily": "Inter, sans-serif",
-                                "backgroundColor": "rgba(8,18,24,0.82)",
+                                "backgroundColor": "rgba(240,253,249,0.92)",
                                 "padding": [3, 7],
                                 "borderRadius": 4,
                                 "borderColor": Theme.ACCENT_SOFT,
@@ -403,31 +403,31 @@ function(params) {
   var p20 = params.find(function(p) { return p.seriesName === 'MM20'; });
   if (p4  && p4.data)  mmCurto = (typeof p4.data  === 'object' ? p4.data.tooltip_mm_curto  : p4.data)  || '—';
   if (p20 && p20.data) mmLongo = (typeof p20.data === 'object' ? p20.data.tooltip_mm_longo : p20.data) || '—';
-  var varColor = '#8AA0A8';
-  if (variacao.indexOf('+') >= 0) varColor = '#00FF87';
-  else if (variacao.indexOf('-') >= 0) varColor = '#FF4C4C';
+  var varColor = '#5E8B83';
+  if (variacao.indexOf('+') >= 0) varColor = '#18C99E';
+  else if (variacao.indexOf('-') >= 0) varColor = '#D93025';
   var dot = '<span style="display:inline-block;width:9px;height:9px;border-radius:50%;'
           + 'background:' + main.color + ';margin-right:6px;vertical-align:middle;'
           + 'box-shadow:0 0 6px ' + main.color + ';"></span>';
   var html = '<div style="font-family:Inter,sans-serif;padding:4px 2px;min-width:215px;">';
-  html += '<div style="font-size:11px;font-weight:700;color:#8AA0A8;letter-spacing:0.8px;'
+  html += '<div style="font-size:11px;font-weight:700;color:#5E8B83;letter-spacing:0.8px;'
         + 'text-transform:uppercase;margin-bottom:9px;padding-bottom:7px;'
-        + 'border-bottom:1px solid #1F3A44;">' + label + '</div>';
+        + 'border-bottom:1px solid rgba(46,230,192,0.20);">' + label + '</div>';
   html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;">'
-        + '<span style="color:#B0C4CC;font-size:12px;">' + dot + main.seriesName + '</span>'
-        + '<span style="font-weight:700;color:#E8F1F0;font-size:13px;">' + valor + '</span></div>';
+        + '<span style="color:#5E8B83;font-size:12px;">' + dot + main.seriesName + '</span>'
+        + '<span style="font-weight:700;color:#0D2B26;font-size:13px;">' + valor + '</span></div>';
   html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:9px;">'
-        + '<span style="color:#8AA0A8;font-size:12px;">&nbsp;&nbsp;&nbsp;&nbsp;&#8597; Variação</span>'
+        + '<span style="color:#5E8B83;font-size:12px;">&nbsp;&nbsp;&nbsp;&nbsp;&#8597; Variação</span>'
         + '<span style="font-weight:600;color:' + varColor + ';font-size:12px;">' + variacao + '</span></div>';
-  html += '<div style="height:1px;background:linear-gradient(90deg,#1F3A44,transparent);margin-bottom:8px;"></div>';
+  html += '<div style="height:1px;background:linear-gradient(90deg,rgba(46,230,192,0.25),transparent);margin-bottom:8px;"></div>';
   html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">'
         + '<span style="font-size:11px;"><span style="color:#FBBF24;margin-right:4px;">&#9632;</span>'
-        + '<span style="color:#CCAC60;">MM4</span> <span style="color:#8AA0A8;font-size:10px;">(curto)</span></span>'
-        + '<span style="font-weight:600;color:#E8F1F0;font-size:12px;">' + mmCurto + '</span></div>';
+        + '<span style="color:#CCAC60;">MM4</span> <span style="color:#5E8B83;font-size:10px;">(curto)</span></span>'
+        + '<span style="font-weight:600;color:#0D2B26;font-size:12px;">' + mmCurto + '</span></div>';
   html += '<div style="display:flex;justify-content:space-between;align-items:center;">'
         + '<span style="font-size:11px;"><span style="color:#FB923C;margin-right:4px;">&#9632;</span>'
-        + '<span style="color:#CC8050;">MM20</span> <span style="color:#8AA0A8;font-size:10px;">(longo)</span></span>'
-        + '<span style="font-weight:600;color:#E8F1F0;font-size:12px;">' + mmLongo + '</span></div>';
+        + '<span style="color:#CC8050;">MM20</span> <span style="color:#5E8B83;font-size:10px;">(longo)</span></span>'
+        + '<span style="font-weight:600;color:#0D2B26;font-size:12px;">' + mmLongo + '</span></div>';
   html += '</div>';
   return html;
 }
@@ -509,13 +509,13 @@ def build_absenteismo_ranking_chart(
         bar_gradient = {
             "type": "linear", "x": 0, "y": 0, "x2": 0, "y2": 1,
             "colorStops": [
-                {"offset": 0, "color": "#3FE0C5"},
-                {"offset": 1, "color": "rgba(63,224,197,0.35)"},
+                {"offset": 0, "color": "#18C99E"},
+                {"offset": 1, "color": "rgba(24,201,158,0.25)"},
             ],
         }
         
         label_color = _GREEN
-        emphasis_shadow = "rgba(63,224,197,0.55)"
+        emphasis_shadow = "rgba(24,201,158,0.45)"
         title_text = f"🟢 Top {top_n} Menores Absenteísmos — Média das Últimas {len(ultimas)} Semanas"
 
     top["oficina_label"] = top[Columns.OFICINA_MP].str[:28]
@@ -546,27 +546,27 @@ function(params) {
   var maxAbs = 50;
   var pct = Math.min(100, Math.round(((d.value || 0) / maxAbs) * 100));
   var html = '<div style="font-family:Inter,sans-serif;padding:4px 2px;min-width:220px;">';
-  html += '<div style="font-size:11px;font-weight:700;color:#8AA0A8;letter-spacing:0.7px;'
+  html += '<div style="font-size:11px;font-weight:700;color:#5E8B83;letter-spacing:0.7px;'
         + 'text-transform:uppercase;margin-bottom:9px;padding-bottom:7px;'
-        + 'border-bottom:1px solid #1F3A44;word-break:break-word;">'
+        + 'border-bottom:1px solid rgba(46,230,192,0.20);word-break:break-word;">'
         + (d.oficina_full || '') + '</div>';
   html += '<div style="margin-bottom:8px;">'
         + '<div style="display:flex;justify-content:space-between;margin-bottom:5px;">'
-        + '<span style="color:#B0C4CC;font-size:12px;">Absenteísmo</span>'
+        + '<span style="color:#5E8B83;font-size:12px;">Absenteísmo</span>'
         + '<span style="font-weight:700;font-size:13px;color:' + barColor + ';">' + (d.tooltip_abs || '—') + '</span>'
         + '</div>'
         + '<div style="height:6px;background:#1A2D35;border-radius:3px;overflow:hidden;">'
         + '<div style="height:100%;width:' + pct + '%;background:' + barColor + ';border-radius:3px;'
         + 'box-shadow:0 0 8px ' + barColor + ';transition:width 0.3s;"></div>'
         + '</div></div>';
-  html += '<div style="height:1px;background:linear-gradient(90deg,#1F3A44,transparent);margin-bottom:7px;"></div>';
+  html += '<div style="height:1px;background:linear-gradient(90deg,rgba(46,230,192,0.25),transparent);margin-bottom:7px;"></div>';
   html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">'
-        + '<span style="color:#8AA0A8;font-size:12px;">Efetivos</span>'
-        + '<span style="font-weight:600;color:#E8F1F0;font-size:12px;">' + (d.tooltip_ef || '—') + '</span>'
+        + '<span style="color:#5E8B83;font-size:12px;">Efetivos</span>'
+        + '<span style="font-weight:600;color:#0D2B26;font-size:12px;">' + (d.tooltip_ef || '—') + '</span>'
         + '</div>';
   html += '<div style="display:flex;justify-content:space-between;align-items:center;">'
-        + '<span style="color:#8AA0A8;font-size:12px;">Trabalhados</span>'
-        + '<span style="font-weight:600;color:#E8F1F0;font-size:12px;">' + (d.tooltip_trab || '—') + '</span>'
+        + '<span style="color:#5E8B83;font-size:12px;">Trabalhados</span>'
+        + '<span style="font-weight:600;color:#0D2B26;font-size:12px;">' + (d.tooltip_trab || '—') + '</span>'
         + '</div>';
   html += '</div>';
   return html;
@@ -591,13 +591,13 @@ function(params) {
         },
         "tooltip": {
             "trigger": "item",
-            "backgroundColor": "rgba(8,18,24,0.96)",
-            "borderColor": "#1F3A44",
+            "backgroundColor": "rgba(255,255,255,0.97)",
+            "borderColor": "rgba(46,230,192,0.28)",
             "borderWidth": 1,
             "padding": [10, 14],
             "confine": True,
             "textStyle": {
-                "color": "#E8F1F0",
+                "color": "#0D2B26",
                 "fontFamily": "Inter, sans-serif",
                 "fontSize": 13,
             },
@@ -655,7 +655,7 @@ function(params) {
                     "fontWeight": "bold",
                     "fontFamily": "Inter, sans-serif",
                     "fontSize": 13,
-                    "backgroundColor": "rgba(8,18,24,0.75)",
+                    "backgroundColor": "rgba(240,253,249,0.88)",
                     "padding": [3, 6],
                     "borderRadius": 4,
                     "formatter": "{c}%",
@@ -681,7 +681,7 @@ function(params) {
                                 "fontWeight": "bold",
                                 "fontSize": 11,
                                 "fontFamily": "Inter, sans-serif",
-                                "backgroundColor": "rgba(8,18,24,0.82)",
+                                "backgroundColor": "rgba(240,253,249,0.92)",
                                 "padding": [3, 7],
                                 "borderRadius": 4,
                             },

@@ -44,13 +44,16 @@ def _render_delta_html(card: KpiCardData) -> str:
 
 
 def render_kpi_cards(cards: list[KpiCardData]) -> None:
-    """Renderiza um grid responsivo de cards de KPI."""
+    """
+    Renderiza um grid responsivo de cards de KPI.
+
+    Cada card exibe: icone ✦ + label (uppercase teal), valor grande (texto escuro)
+    e delta de variacao. O emoji de icone foi removido do topo — o identificador
+    visual e feito pelo simbolo ✦ prefixado ao label, alinhado ao design de referencia.
+    """
     cards_html = "".join(
         f'<div class="kpi-card">'
-        f'<div class="kpi-top">'
-        f'<span class="kpi-icon">{card.icon}</span>'
-        f'</div>'
-        f'<div class="kpi-label">{card.label}</div>'
+        f'<div class="kpi-label"><span class="kpi-star">&#10022;</span> {card.label}</div>'
         f'<div class="kpi-value">{card.value_display}</div>'
         f'{_render_delta_html(card)}'
         f'</div>'

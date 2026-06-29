@@ -1,16 +1,12 @@
 """
 ui/styles.py
 -------------
-Centraliza todo o CSS customizado da aplicação. A ideia de manter o CSS
-como uma função que devolve uma string (em vez de espalhar `st.markdown`
-pelo código) é permitir reaproveitar o mesmo tema em qualquer página ou
-componente futuro, e ter um único lugar para ajustar cores/fontes.
+Centraliza todo o CSS customizado da aplicacao. Tema claro (light)
+alinhado ao padrao visual do SO, com cards brancos e radial-gradient
+teal partindo do topo — identico ao design de referencia.
 
-O tema usa CSS Custom Properties (variáveis CSS) espelhando
-`core.config.Theme`, então qualquer ajuste de paleta deve ser feito nos
-dois lugares (Theme = usado pelo ECharts / Python, CSS vars = usado pelo
-HTML/CSS). Manter os dois sincronizados é responsabilidade de quem
-alterar a paleta no futuro.
+O tema usa CSS Custom Properties espelhando `core.config.Theme`,
+de modo que qualquer ajuste de paleta deve ser feito nos dois lugares.
 """
 
 from __future__ import annotations
@@ -20,23 +16,26 @@ from core.config import Theme
 
 def build_css() -> str:
     return f"""<style>
-@import url('https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Inter:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap');
 
 :root {{
-    --bg-primary: {Theme.BG_PRIMARY};
+    --bg-primary:   {Theme.BG_PRIMARY};
     --bg-secondary: {Theme.BG_SECONDARY};
-    --card-bg: {Theme.CARD_BG};
-    --card-border: {Theme.CARD_BORDER};
-    --accent: {Theme.ACCENT};
-    --accent-soft: {Theme.ACCENT_SOFT};
-    --accent-glow: {Theme.ACCENT_GLOW};
-    --positive: {Theme.POSITIVE};
-    --negative: {Theme.NEGATIVE};
-    --neutral: {Theme.NEUTRAL};
+    --card-bg:      {Theme.CARD_BG};
+    --card-border:  {Theme.CARD_BORDER};
+    --accent:       {Theme.ACCENT};
+    --accent-soft:  {Theme.ACCENT_SOFT};
+    --accent-glow:  {Theme.ACCENT_GLOW};
+    --positive:     {Theme.POSITIVE};
+    --negative:     {Theme.NEGATIVE};
+    --neutral:      {Theme.NEUTRAL};
     --text-primary: {Theme.TEXT_PRIMARY};
-    --text-muted: {Theme.TEXT_MUTED};
+    --text-muted:   {Theme.TEXT_MUTED};
     --font-heading: {Theme.FONT_HEADING};
-    --font-body: {Theme.FONT_BODY};
+    --font-body:    {Theme.FONT_BODY};
+    --radius-lg: 16px;
+    --radius-md: 12px;
+    --radius-sm:  8px;
 }}
 
 /* ---------- Base ---------- */
@@ -45,7 +44,8 @@ html, body, [class*="css"] {{
 }}
 
 .stApp {{
-    background: radial-gradient(circle at top left, #0E171B 0%, var(--bg-primary) 55%);
+    background: var(--bg-primary);
+    color: var(--text-primary);
 }}
 
 h1, h2, h3, h4 {{
@@ -54,11 +54,7 @@ h1, h2, h3, h4 {{
     letter-spacing: 0.2px;
 }}
 
-p, span, label, div {{
-    color: var(--text-primary);
-}}
-
-/* ---------- Cabeçalho ---------- */
+/* ---------- Cabecalho ---------- */
 .app-header {{
     display: flex;
     flex-direction: column;
@@ -76,12 +72,12 @@ p, span, label, div {{
 
 .app-header .title-row .icon {{
     font-size: 1.9rem;
-    filter: drop-shadow(0 0 10px var(--accent-glow));
 }}
 
 .app-header h1 {{
     font-size: 1.65rem;
     margin: 0;
+    color: var(--text-primary) !important;
 }}
 
 .app-header .subtitle {{
@@ -98,59 +94,65 @@ p, span, label, div {{
     margin-bottom: 1.6rem;
 }}
 
+/* Card: fundo branco com radial-gradient teal partindo do topo */
 .kpi-card {{
-    background: linear-gradient(180deg, var(--card-bg) 0%, rgba(20, 28, 33, 0.6) 100%);
-    border: 1px solid var(--card-border);
-    border-radius: 14px;
-    padding: 1.05rem 1.15rem;
+    background: #FFFFFF;
+    background-image: radial-gradient(
+        ellipse 120% 90% at 50% -15%,
+        rgba(46,230,192,0.22) 0%,
+        rgba(46,230,192,0.06) 45%,
+        transparent 70%
+    );
+    border: 1px solid rgba(46,230,192,0.35);
+    border-radius: var(--radius-lg);
+    padding: 1.1rem 1.25rem;
     position: relative;
     overflow: hidden;
-    transition: transform 0.15s ease, border-color 0.15s ease;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04), 0 2px 16px rgba(46,230,192,0.06);
 }}
 
-.kpi-card::before {{
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(120px 60px at 90% -10%, var(--accent-glow), transparent 70%);
-    pointer-events: none;
-}}
+.kpi-card::before {{ display: none; }}
+.kpi-card::after  {{ display: none; }}
 
 .kpi-card:hover {{
     transform: translateY(-2px);
-    border-color: var(--accent-soft);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.07), 0 0 24px rgba(46,230,192,0.14);
 }}
 
-.kpi-card .kpi-top {{
+/* Icone ✦ + label — teal, uppercase */
+.kpi-card .kpi-label {{
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    margin-bottom: 0.35rem;
-}}
-
-.kpi-card .kpi-icon {{
-    font-size: 1.15rem;
-    opacity: 0.9;
-}}
-
-.kpi-card .kpi-label {{
-    font-size: 0.78rem;
-    color: var(--text-muted);
+    gap: 0.28rem;
+    font-size: 0.68rem;
+    font-family: var(--font-body);
+    color: var(--accent);
     text-transform: uppercase;
-    letter-spacing: 0.4px;
+    letter-spacing: 0.08em;
+    font-weight: 600;
     margin-bottom: 0.15rem;
 }}
 
-.kpi-card .kpi-value {{
-    font-family: var(--font-heading);
-    font-size: 1.65rem;
-    font-weight: 600;
-    color: var(--text-primary);
-    line-height: 1.1;
+.kpi-card .kpi-star {{
+    font-size: 0.72rem;
+    line-height: 1;
+    color: var(--accent);
 }}
 
+/* Valor principal — grande, escuro, bold */
+.kpi-card .kpi-value {{
+    font-family: var(--font-heading);
+    font-size: 1.95rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+}}
+
+/* Delta / variacao */
 .kpi-card .kpi-delta {{
-    font-size: 0.8rem;
+    font-size: 0.78rem;
     margin-top: 0.45rem;
     font-weight: 500;
 }}
@@ -159,13 +161,14 @@ p, span, label, div {{
 .kpi-delta.negative {{ color: var(--negative); }}
 .kpi-delta.neutral  {{ color: var(--neutral); }}
 
-/* ---------- Cartão genérico (seções) ---------- */
+/* ---------- Cartao generico (secoes) ---------- */
 .section-card {{
     background: var(--card-bg);
     border: 1px solid var(--card-border);
-    border-radius: 14px;
+    border-radius: var(--radius-md);
     padding: 1.1rem 1.25rem;
     margin-bottom: 1.1rem;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
 }}
 
 .section-card h4 {{
@@ -179,7 +182,7 @@ p, span, label, div {{
     gap: 6px;
     padding: 4px 12px;
     border-radius: 999px;
-    background: rgba(63, 224, 197, 0.08);
+    background: var(--accent-soft);
     border: 1px solid var(--card-border);
     font-size: 0.85rem;
     font-weight: 500;
@@ -214,21 +217,42 @@ section[data-testid="stSidebar"] .block-container {{
 }}
 
 /* ---------- Inputs ---------- */
-div[data-baseweb="select"] > div, .stMultiSelect div[data-baseweb="select"] > div {{
+div[data-baseweb="select"] > div,
+.stMultiSelect div[data-baseweb="select"] > div {{
     background-color: var(--bg-secondary) !important;
     border-color: var(--card-border) !important;
 }}
 
 .stButton button, .stDownloadButton button {{
-    border-radius: 10px;
+    border-radius: var(--radius-sm);
     border: 1px solid var(--card-border);
     background-color: var(--bg-secondary);
     color: var(--text-primary);
+    font-family: var(--font-body);
 }}
 
 .stButton button:hover, .stDownloadButton button:hover {{
     border-color: var(--accent);
     color: var(--accent);
+    background-color: var(--accent-soft);
+}}
+
+/* ---------- Botao primario ---------- */
+button[data-testid="baseButton-primary"] {{
+    background: linear-gradient(135deg, #18C99E 0%, #12A882 100%) !important;
+    color: #FFFFFF !important;
+    border: 1px solid #18C99E !important;
+    font-weight: 700 !important;
+    font-family: var(--font-heading) !important;
+    font-size: 0.97rem !important;
+    border-radius: var(--radius-md) !important;
+    box-shadow: 0 4px 18px rgba(24,201,158,0.20) !important;
+    transition: all 0.2s ease !important;
+}}
+
+button[data-testid="baseButton-primary"]:hover {{
+    box-shadow: 0 6px 28px rgba(24,201,158,0.38) !important;
+    transform: translateY(-1px) !important;
 }}
 
 /* ---------- Responsividade ---------- */
@@ -238,7 +262,7 @@ div[data-baseweb="select"] > div, .stMultiSelect div[data-baseweb="select"] > di
         gap: 10px;
     }}
     .kpi-card .kpi-value {{
-        font-size: 1.35rem;
+        font-size: 1.5rem;
     }}
     .app-header h1 {{
         font-size: 1.3rem;
@@ -250,17 +274,18 @@ div[data-baseweb="select"] > div, .stMultiSelect div[data-baseweb="select"] > di
     max-height: 420px;
     overflow-y: auto;
     border: 1px solid var(--card-border);
-    border-radius: 12px;
+    border-radius: var(--radius-md);
     margin-top: 12px;
     background-color: var(--card-bg);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
 }}
 
-/* Custom scrollbar for the table container */
+/* Scrollbar */
 .custom-table-container::-webkit-scrollbar {{
     width: 6px;
     height: 6px;
 }}
-.custom-table-container::-webkit-scrollbar-track {{ 
+.custom-table-container::-webkit-scrollbar-track {{
     background: transparent;
 }}
 .custom-table-container::-webkit-scrollbar-thumb {{
@@ -268,7 +293,7 @@ div[data-baseweb="select"] > div, .stMultiSelect div[data-baseweb="select"] > di
     border-radius: 10px;
 }}
 .custom-table-container::-webkit-scrollbar-thumb:hover {{
-    background: var(--accent-soft);
+    background: var(--accent);
 }}
 
 .custom-table {{
@@ -278,6 +303,7 @@ div[data-baseweb="select"] > div, .stMultiSelect div[data-baseweb="select"] > di
     font-size: 0.88rem;
 }}
 
+/* Cabecalho: fundo levemente teal, texto teal escuro */
 .custom-table thead tr {{
     background-color: var(--bg-secondary) !important;
     position: sticky;
@@ -286,38 +312,42 @@ div[data-baseweb="select"] > div, .stMultiSelect div[data-baseweb="select"] > di
 }}
 
 .custom-table th {{
-    padding: 12px 16px;
+    padding: 11px 16px;
     font-family: var(--font-heading);
     font-weight: 700;
-    color: #00FF87;
-    font-size: 0.82rem;
+    color: var(--accent);
+    font-size: 0.78rem;
     text-transform: uppercase;
     letter-spacing: 0.6px;
-    border-bottom: 2px solid #00FF87 !important;
-    background: linear-gradient(180deg, #0d2218 0%, var(--bg-secondary) 100%);
-    text-shadow: 0 0 12px rgba(0, 255, 135, 0.55);
+    border-bottom: 2px solid var(--card-border);
+    background: var(--bg-secondary);
 }}
 
 .custom-table td {{
     padding: 10px 16px;
-    border-bottom: 1px solid var(--card-border);
+    border-bottom: 1px solid rgba(46,230,192,0.12);
     color: var(--text-primary);
     vertical-align: middle;
 }}
 
 .custom-table tbody tr {{
     background-color: transparent;
-    transition: background-color 0.15s ease;
+    transition: background-color 0.12s ease;
+}}
+
+.custom-table tbody tr:nth-child(even) {{
+    background-color: rgba(46,230,192,0.03);
 }}
 
 .custom-table tbody tr:hover {{
-    background-color: rgba(63, 224, 197, 0.05) !important;
+    background-color: rgba(46,230,192,0.07) !important;
 }}
 
 .custom-table tbody tr:last-child td {{
     border-bottom: none;
 }}
 
+/* ---------- Badges de absenteismo ---------- */
 .badge-abs {{
     display: inline-flex;
     align-items: center;
@@ -330,32 +360,24 @@ div[data-baseweb="select"] > div, .stMultiSelect div[data-baseweb="select"] > di
 }}
 
 .badge-abs.high {{
-    background-color: rgba(255, 107, 107, 0.12);
+    background-color: rgba(217,48,37,0.10);
     color: var(--negative);
-    border: 1px solid rgba(255, 107, 107, 0.2);
+    border: 1px solid rgba(217,48,37,0.22);
 }}
 
 .badge-abs.low {{
-    background-color: rgba(63, 224, 197, 0.12);
+    background-color: rgba(24,201,158,0.10);
     color: var(--positive);
-    border: 1px solid rgba(63, 224, 197, 0.2);
+    border: 1px solid rgba(24,201,158,0.22);
 }}
 
 .badge-abs.medium {{
-    background-color: rgba(138, 160, 168, 0.12);
+    background-color: rgba(94,139,131,0.10);
     color: var(--neutral);
-    border: 1px solid rgba(138, 160, 168, 0.2);
+    border: 1px solid rgba(94,139,131,0.20);
 }}
 
-#MainMenu {{visibility: hidden;}}
-footer {{visibility: hidden;}}
-
-/* ---------- Tooltips ECharts ---------- */
-/* As tooltips do ECharts são customizadas via JS e herdam estilos inline */
-
-/* ══════════ Página de Cadastro / Formulário ══════════ */
-
-/* Cabeçalho de seção numerado */
+/* ---------- Formulario de Cadastro ---------- */
 .form-section-hdr {{
     display: flex;
     align-items: center;
@@ -373,8 +395,8 @@ footer {{visibility: hidden;}}
     width: 22px;
     height: 22px;
     border-radius: 6px;
-    background: rgba(63, 224, 197, 0.12);
-    border: 1px solid rgba(63, 224, 197, 0.28);
+    background: var(--accent-soft);
+    border: 1px solid rgba(24,201,158,0.28);
     font-family: var(--font-heading);
     font-size: 0.68rem;
     font-weight: 700;
@@ -404,53 +426,12 @@ footer {{visibility: hidden;}}
     padding-right: 2px;
 }}
 
-/* Botão primário de ação */
-button[data-testid="baseButton-primary"] {{
-    background: linear-gradient(135deg, #3FE0C5 0%, #2BB7A3 100%) !important;
-    color: #071210 !important;
-    border: 1px solid #3FE0C5 !important;
-    font-weight: 700 !important;
-    font-family: 'Sora', sans-serif !important;
-    font-size: 0.97rem !important;
-    border-radius: 12px !important;
-    box-shadow: 0 4px 18px rgba(63, 224, 197, 0.22) !important;
-    transition: all 0.2s ease !important;
-    letter-spacing: 0.3px;
-}}
-
-button[data-testid="baseButton-primary"]:hover {{
-    box-shadow: 0 6px 28px rgba(63, 224, 197, 0.42) !important;
-    transform: translateY(-1px) !important;
-}}
-
-/* Chips de coluna (importação em lote) */
-.col-chips {{
-    display: flex;
-    flex-wrap: wrap;
-    gap: 5px;
-    margin-top: 0.55rem;
-}}
-
-.col-chip {{
-    display: inline-flex;
-    align-items: center;
-    padding: 3px 9px;
-    border-radius: 6px;
-    background: rgba(63, 224, 197, 0.07);
-    border: 1px solid rgba(63, 224, 197, 0.18);
-    font-size: 0.76rem;
-    font-family: 'Courier New', monospace;
-    color: var(--accent);
-    font-weight: 600;
-    white-space: nowrap;
-}}
-
-/* Caixa de info do import */
+/* ---------- Info box de importacao ---------- */
 .import-info-box {{
-    background: linear-gradient(145deg, rgba(63, 224, 197, 0.05) 0%, rgba(20, 28, 33, 0.85) 100%);
-    border: 1px solid rgba(63, 224, 197, 0.14);
+    background: linear-gradient(145deg, var(--accent-soft) 0%, var(--bg-secondary) 100%);
+    border: 1px solid rgba(24,201,158,0.18);
     border-left: 3px solid var(--accent);
-    border-radius: 10px;
+    border-radius: var(--radius-sm);
     padding: 0.9rem 1.15rem 1rem;
     margin-bottom: 1.1rem;
 }}
@@ -472,4 +453,35 @@ button[data-testid="baseButton-primary"]:hover {{
     margin-bottom: 0.55rem;
     line-height: 1.55;
 }}
+
+/* ---------- Chips de coluna ---------- */
+.col-chips {{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-top: 0.55rem;
+}}
+
+.col-chip {{
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 9px;
+    border-radius: 6px;
+    background: var(--accent-soft);
+    border: 1px solid rgba(24,201,158,0.22);
+    font-size: 0.76rem;
+    font-family: 'Courier New', monospace;
+    color: var(--accent);
+    font-weight: 600;
+    white-space: nowrap;
+}}
+
+/* ---------- Misc ---------- */
+#MainMenu {{visibility: hidden;}}
+footer {{visibility: hidden;}}
+
+::-webkit-scrollbar {{ width: 6px; height: 6px; }}
+::-webkit-scrollbar-track {{ background: var(--bg-secondary); }}
+::-webkit-scrollbar-thumb {{ background: var(--card-border); border-radius: 6px; }}
+::-webkit-scrollbar-thumb:hover {{ background: var(--accent); }}
 </style>"""

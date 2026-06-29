@@ -93,24 +93,24 @@ INDICATORS: dict[str, IndicatorMeta] = {
 KPI_ORDER = ["efetivos", "trabalhados", "ausencia", "contratacoes", "demissoes", "absenteismo"]
 
 # ---------------------------------------------------------------------------
-# Paleta de cores — tema dark com verde-ciano neon suave
+# Paleta de cores — tema claro (light) alinhado ao padrao do SO
 # ---------------------------------------------------------------------------
 class Theme:
-    BG_PRIMARY = "#0B1014"        # fundo principal (quase preto, levemente azulado)
-    BG_SECONDARY = "#11181D"      # fundo de sidebar / superfícies
-    CARD_BG = "#141C21"           # fundo dos cards
-    CARD_BORDER = "#1F2C31"       # borda sutil dos cards
+    BG_PRIMARY = "#FFFFFF"          # fundo principal (branco)
+    BG_SECONDARY = "#F0FDF9"        # fundo de sidebar / superficies
+    CARD_BG = "#FFFFFF"             # fundo dos cards
+    CARD_BORDER = "rgba(46,230,192,0.35)"  # borda teal suave
 
-    ACCENT = "#3FE0C5"            # verde-ciano neon SUAVE (cor de destaque)
-    ACCENT_SOFT = "#2BB7A3"       # variação mais discreta do accent
-    ACCENT_GLOW = "rgba(63, 224, 197, 0.18)"   # glow suave para sombras/bordas
+    ACCENT = "#18C99E"              # teal principal
+    ACCENT_SOFT = "rgba(46,230,192,0.18)"  # teal muito suave (fundos)
+    ACCENT_GLOW = "rgba(46,230,192,0.22)"  # glow radial dos cards
 
-    POSITIVE = "#3FE0C5"          # variação positiva (mesma família do accent)
-    NEGATIVE = "#FF6B6B"          # variação negativa
-    NEUTRAL = "#8AA0A8"           # variação neutra / sem dado
+    POSITIVE = "#18C99E"            # positivo — teal
+    NEGATIVE = "#D93025"            # negativo — vermelho semantico
+    NEUTRAL = "#5E8B83"             # neutro / sem dado
 
-    TEXT_PRIMARY = "#E8F1F0"
-    TEXT_MUTED = "#8AA0A8"
+    TEXT_PRIMARY = "#0D2B26"        # texto principal (verde-escuro quase preto)
+    TEXT_MUTED = "#5E8B83"          # texto secundario
 
     FONT_HEADING = "'Sora', sans-serif"
     FONT_BODY = "'Inter', sans-serif"
