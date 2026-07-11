@@ -3,7 +3,7 @@
 disableWidgetStateDuplicationWarning = true
 
 [server]
-headless = true
+headless = false
 enableCORS = false
 enableXsrfProtection = true
 

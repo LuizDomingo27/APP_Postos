@@ -200,15 +200,15 @@ div[data-testid="collapsedControl"] {{
 
 /* Aproxima o conteúdo do topo já que não há mais sidebar */
 .block-container {{
-    padding-top: 2.2rem !important;
+    padding-top: 3.4rem !important;
 }}
 
 /* ---------- Navbar (topo) ---------- */
 .app-navbar {{
     display: flex;
     flex-direction: column;
-    gap: 2px;
-    padding-bottom: 0.35rem;
+    gap: 1px;
+    padding-top: 1.15rem;
 }}
 
 .app-navbar .brand-title {{
