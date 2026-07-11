@@ -74,6 +74,39 @@ def _sanitize(text: str, token: str) -> str:
     return text.replace(token, "***").strip()
 
 
+def get_sync_status() -> tuple[bool, str]:
+    """
+    Verifica, SEM executar nenhuma operação de rede, se a sincronização com o
+    GitHub está pronta para funcionar. Serve para exibir um aviso claro na UI.
+
+    Retorna (habilitada, motivo):
+      • (True,  "...") quando os secrets estão configurados e é um repo git.
+      • (False, "...") com uma explicação amigável do que falta configurar.
+
+    Isso é o que torna a causa da perda de dados VISÍVEL: no Streamlit Cloud o
+    disco é efêmero, então se o sync estiver desativado, os cadastros somem no
+    próximo reinício — e o usuário precisa saber disso antes de gravar.
+    """
+    cfg = _read_github_config()
+    if cfg is None:
+        return (
+            False,
+            "Sincronização com o GitHub DESATIVADA (secrets não configurados). "
+            "No Streamlit Cloud o armazenamento é temporário: novos lançamentos "
+            "serão perdidos quando o app reiniciar. Configure a seção [github] em "
+            "Settings → Secrets para que os dados sejam salvos de forma permanente.",
+        )
+
+    check = _run_git(["rev-parse", "--is-inside-work-tree"], BASE_DIR)
+    if check.returncode != 0:
+        return (
+            False,
+            "Sincronização indisponível: a aplicação não está em um repositório git.",
+        )
+
+    return True, "Sincronização com o GitHub ativa. Novos lançamentos serão persistidos."
+
+
 def sync_db_to_github(commit_message: str) -> tuple[bool, str]:
     """
     Comita `Dataset/postos.db` e dá push para o GitHub.

@@ -502,7 +502,7 @@ def build_absenteismo_ranking_chart(
         }
         label_color = _RED
         emphasis_shadow = "rgba(255,107,107,0.55)"
-        title_text = "" #st.markdown(f"#### 🔴 Top {top_n} Maiores Absenteísmos — Média das Últimas {len(ultimas)} Semanas", unsafe_allow_html=True)
+        title_text = ""  # O título desta seção é renderizado fora do gráfico (ver ui/layout.py).
         
     else:
         top = agrupado.nsmallest(top_n, "absenteismo").copy()
@@ -516,7 +516,7 @@ def build_absenteismo_ranking_chart(
         
         label_color = _GREEN
         emphasis_shadow = "rgba(24,201,158,0.45)"
-        title_text = f"🟢 Top {top_n} Menores Absenteísmos — Média das Últimas {len(ultimas)} Semanas"
+        title_text = f"Top {top_n} Menores Absenteísmos — Média das Últimas {len(ultimas)} Semanas"
 
     top["oficina_label"] = top[Columns.OFICINA_MP].str[:28]
     top["tooltip_abs"]   = top["absenteismo"].apply(format_percent_br)

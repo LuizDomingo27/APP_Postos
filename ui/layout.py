@@ -16,7 +16,8 @@ from __future__ import annotations
 import pandas as pd
 import streamlit as st
 
-from core.config import APP_ICON, APP_SUBTITLE, APP_TITLE, Columns, INDICATORS, KPI_ORDER
+from core.config import Columns, INDICATORS, KPI_ORDER
+from core.errors import guard
 from core.utils import format_int_br, format_percent_br
 from services.analytics_service import latest_period_delta, monthly_evolution, weekly_evolution
 from services.indicators_service import compute_kpis, kpi_value
@@ -28,21 +29,7 @@ from ui.components.charts import (
 import streamlit.components.v1 as components
 
 
-def render_header() -> None:
-    st.markdown(
-        f"""
-        <div class="app-header">
-            <div class="title-row">
-                <span class="icon">{APP_ICON}</span>
-                <h1>{APP_TITLE}</h1>
-            </div>
-            <div class="subtitle">{APP_SUBTITLE}</div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-
+@guard("renderizar os indicadores (KPIs)")
 def render_kpi_section(df_filtered: pd.DataFrame) -> None:
     """Renderiza os 5 cards de KPI, cada um com a variação vs. semana anterior."""
     if df_filtered.empty:
@@ -86,7 +73,7 @@ def render_kpi_section(df_filtered: pd.DataFrame) -> None:
 
 def _indicator_selector(tab_key: str) -> str:
     options = list(KPI_ORDER)
-    labels = [f"{INDICATORS[k].icon} {INDICATORS[k].label}" for k in options]
+    labels = [INDICATORS[k].label for k in options]
     idx = st.radio(
         "Indicador",
         options=range(len(options)),
@@ -98,6 +85,7 @@ def _indicator_selector(tab_key: str) -> str:
     return options[idx]
 
 
+@guard("renderizar a evolução semanal")
 def render_weekly_tab(df_filtered: pd.DataFrame) -> None:
     st.markdown("#### Evolução semanal por indicador")
     indicator_key = _indicator_selector("semanal")
@@ -122,6 +110,7 @@ def render_weekly_tab(df_filtered: pd.DataFrame) -> None:
     )
 
 
+@guard("renderizar a evolução mensal")
 def render_monthly_tab(df_filtered: pd.DataFrame) -> None:
     st.markdown("#### Evolução mensal por indicador")
     indicator_key = _indicator_selector("mensal")
@@ -332,6 +321,7 @@ def _render_table_comparacao(
     st.markdown(html, unsafe_allow_html=True)
 
 
+@guard("renderizar a aba de oficinas")
 def render_workshops_tab(df_filtered: pd.DataFrame, df_full: pd.DataFrame) -> None:
     """
     Aba Oficinas. Recebe df_filtered (recorte ativo) e df_full (dataset completo).
@@ -372,7 +362,7 @@ def render_workshops_tab(df_filtered: pd.DataFrame, df_full: pd.DataFrame) -> No
             semana_ant = int(semanas_full[idx_atual - 1])
             df_semana_ant = df_year[df_year[Columns.SEMANA] == semana_ant]
             source_label = (
-                f"⚠️ Apenas a semana {semana_atual} está no filtro ativo. "
+                f"Apenas a semana {semana_atual} está no filtro ativo. "
                 f"A semana {semana_ant} foi buscada automaticamente no dataset completo do ano {ano_atual} para comparação."
             )
         else:

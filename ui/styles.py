@@ -189,14 +189,70 @@ h1, h2, h3, h4 {{
     margin-right: 8px;
 }}
 
-/* ---------- Sidebar ---------- */
+/* ---------- Sidebar (desativada — navegação e filtros migraram para o topo) ---------- */
 section[data-testid="stSidebar"] {{
-    background: var(--bg-secondary);
-    border-right: 1px solid var(--card-border);
+    display: none !important;
+}}
+button[data-testid="stSidebarCollapseButton"],
+div[data-testid="collapsedControl"] {{
+    display: none !important;
 }}
 
-section[data-testid="stSidebar"] .block-container {{
-    padding-top: 1.4rem;
+/* Aproxima o conteúdo do topo já que não há mais sidebar */
+.block-container {{
+    padding-top: 2.2rem !important;
+}}
+
+/* ---------- Navbar (topo) ---------- */
+.app-navbar {{
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding-bottom: 0.35rem;
+}}
+
+.app-navbar .brand-title {{
+    font-family: var(--font-heading);
+    font-weight: 800;
+    font-size: 1.15rem;
+    line-height: 1.1;
+    color: var(--text-primary);
+    letter-spacing: 0.3px;
+}}
+
+.app-navbar .brand-sub {{
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    font-weight: 600;
+}}
+
+/* Linha divisória sob a navbar inteira */
+.navbar-divider {{
+    height: 1px;
+    background: linear-gradient(90deg, var(--accent-soft), var(--card-border) 40%, transparent);
+    margin: 0.15rem 0 1.4rem 0;
+}}
+
+/* ---------- Barra de filtros (topo do dashboard) ---------- */
+.filter-bar-header {{
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0.2rem 0 0.55rem 0;
+}}
+.filter-bar-header .fb-title {{
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 0.82rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+}}
+.filter-bar-header .fb-hint {{
+    font-size: 0.74rem;
+    color: var(--text-muted);
 }}
 
 /* ---------- Tabs ---------- */
@@ -238,7 +294,8 @@ div[data-baseweb="select"] > div,
 }}
 
 /* ---------- Botao primario ---------- */
-button[data-testid="baseButton-primary"] {{
+button[data-testid="baseButton-primary"],
+button[data-testid="stBaseButton-primary"] {{
     background: linear-gradient(135deg, #18C99E 0%, #12A882 100%) !important;
     color: #FFFFFF !important;
     border: 1px solid #18C99E !important;
@@ -250,7 +307,8 @@ button[data-testid="baseButton-primary"] {{
     transition: all 0.2s ease !important;
 }}
 
-button[data-testid="baseButton-primary"]:hover {{
+button[data-testid="baseButton-primary"]:hover,
+button[data-testid="stBaseButton-primary"]:hover {{
     box-shadow: 0 6px 28px rgba(24,201,158,0.38) !important;
     transform: translateY(-1px) !important;
 }}

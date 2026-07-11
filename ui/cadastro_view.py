@@ -3,36 +3,57 @@ ui/cadastro_view.py
 --------------------
 Camada de visualização (UI) separada para a funcionalidade de cadastro
 de dados (manual e importação em lote).
+
+Persistência: no Streamlit Community Cloud o disco é efêmero, então todo
+lançamento só sobrevive a um reinício se for sincronizado com o GitHub. Por
+isso esta página exibe, no topo, um aviso claro do estado da sincronização —
+para que o usuário nunca grave achando que os dados ficarão salvos quando, na
+verdade, o sync está desativado.
 """
 
 from __future__ import annotations
 
 import datetime
-from pathlib import Path
 import pandas as pd
 import streamlit as st
 
 from core.config import DB_PATH, Columns
+from core.errors import error_boundary
 from services.data_writer import insert_record, insert_bulk_records, check_record_exists
-from services.git_sync import sync_db_to_github
+from services.git_sync import get_sync_status, sync_db_to_github
+
+
+def _render_sync_banner() -> None:
+    """
+    Mostra o estado da persistência no topo da página de cadastro.
+
+    Quando a sincronização está desativada, este é o aviso que explica a causa
+    da "perda de dados após reiniciar": sem o sync configurado, o Cloud apaga o
+    banco a cada reinício. Assim o problema fica visível ANTES de gravar.
+    """
+    enabled, msg = get_sync_status()
+    if enabled:
+        st.success(msg, icon=":material/cloud_done:")
+    else:
+        st.warning(msg, icon=":material/cloud_off:")
 
 
 def _feedback_sync(commit_message: str) -> None:
     """Sincroniza o banco com o GitHub e mostra o resultado sem quebrar o cadastro."""
     ok, msg = sync_db_to_github(commit_message)
     if ok:
-        st.caption(f"🔄 {msg}")
+        st.caption(msg)
     else:
-        st.warning(f"Registro gravado, mas a sincronização falhou: {msg}")
+        st.warning(f"Registro gravado localmente, mas a sincronização falhou: {msg}")
 
 
-@st.dialog("⚠️ Confirmar Lançamento com Valores Zerados")
+@st.dialog("Confirmar Lançamento com Valores Zerados")
 def confirm_zero_dialog(record_data: dict) -> None:
     st.warning(
         "Os seguintes indicadores foram informados com valor **zero (0)**. "
         "Por favor, confirme se deseja prosseguir:"
     )
-    
+
     # Lista os campos zerados
     zeros = []
     if record_data["qtd_efetivos"] == 0:
@@ -43,20 +64,20 @@ def confirm_zero_dialog(record_data: dict) -> None:
         zeros.append("- **Contratações**")
     if record_data["demissoes"] == 0:
         zeros.append("- **Demissões**")
-        
+
     for z in zeros:
         st.markdown(z)
-        
+
     st.markdown("<br>", unsafe_allow_html=True)
     st.write(
         f"**Registro:** Oficina `{record_data['oficina']}` · "
         f"MP `{record_data['mp']}` · Semana `{record_data['semana']}`"
     )
-    
+
     col1, col2 = st.columns(2)
     with col1:
         if st.button("Sim, salvar mesmo assim", use_container_width=True):
-            try:
+            with error_boundary("salvar o registro"):
                 insert_record(
                     db_path=DB_PATH,
                     frete=record_data["frete"],
@@ -77,8 +98,6 @@ def confirm_zero_dialog(record_data: dict) -> None:
                     f"Semana {record_data['semana']}"
                 )
                 st.rerun()
-            except Exception as exc:
-                st.error(f"Erro ao salvar: {exc}")
     with col2:
         if st.button("Não, voltar e ajustar", use_container_width=True):
             st.rerun()
@@ -90,7 +109,6 @@ def render_cadastro_page(df_full: pd.DataFrame) -> None:
         """
         <div class="app-header">
             <div class="title-row">
-                <span class="icon">➕</span>
                 <h1>Lançamento de Dados</h1>
             </div>
             <div class="subtitle">Adicione novos registros manuais ou importe arquivos Excel para o banco de dados</div>
@@ -99,12 +117,14 @@ def render_cadastro_page(df_full: pd.DataFrame) -> None:
         unsafe_allow_html=True,
     )
 
-    tab_manual, tab_lote = st.tabs(["📝 Formulário Manual", "📥 Importação em Lote"])
+    _render_sync_banner()
+
+    tab_manual, tab_lote = st.tabs(["Formulário Manual", "Importação em Lote"])
 
     # Extrai opções únicas atuais para facilitar a seleção e evitar typos
     frete_options = sorted(df_full[Columns.FRETE].dropna().unique().tolist())
     mp_options = sorted(df_full[Columns.MP].dropna().unique().tolist())
-    
+
     # Extrai a oficina sem a matéria-prima (coluna original)
     oficina_options = sorted(df_full[Columns.OFICINA].dropna().unique().tolist())
 
@@ -126,7 +146,6 @@ def _render_manual_form(
         """
         <div class="form-section-hdr">
             <span class="fsh-num">01</span>
-            <span class="fsh-icon">🏭</span>
             <span class="fsh-title">Identificação</span>
             <span class="fsh-hint">Oficina · Matéria-prima · Transportador</span>
         </div>
@@ -184,7 +203,6 @@ def _render_manual_form(
         """
         <div class="form-section-hdr">
             <span class="fsh-num">02</span>
-            <span class="fsh-icon">📅</span>
             <span class="fsh-title">Período e Semana</span>
             <span class="fsh-hint">Datas de referência · Semana calculada automaticamente</span>
         </div>
@@ -228,7 +246,6 @@ def _render_manual_form(
         """
         <div class="form-section-hdr">
             <span class="fsh-num">03</span>
-            <span class="fsh-icon">🔢</span>
             <span class="fsh-title">Quantidades</span>
             <span class="fsh-hint">Efetivos planejados · Presença realizada · Movimentação</span>
         </div>
@@ -248,7 +265,7 @@ def _render_manual_form(
         demissoes = st.number_input("Demissões", min_value=0, value=0, step=1)
 
     st.markdown("<br>", unsafe_allow_html=True)
-    btn_gravar = st.button("💾 Gravar Registro", use_container_width=True, type="primary")
+    btn_gravar = st.button("Gravar Registro", use_container_width=True, type="primary")
 
     if btn_gravar:
         # Resolve os valores selecionados (existentes ou novos)
@@ -269,11 +286,11 @@ def _render_manual_form(
             for erro in erros:
                 st.error(erro)
         else:
-            try:
+            with error_boundary("validar e gravar o registro"):
                 # 1. Validação de Duplicidade (Oficina + MP + Semana)
                 if check_record_exists(DB_PATH, final_oficina, final_mp, semana):
                     st.error(
-                        f"⚠️ **Erro de Duplicidade:** Já existe um lançamento para a Oficina "
+                        f"**Erro de Duplicidade:** Já existe um lançamento para a Oficina "
                         f"**'{final_oficina}'** e Matéria-prima **'{final_mp}'** na **Semana {semana}**."
                     )
                 else:
@@ -326,8 +343,6 @@ def _render_manual_form(
                             f"dados: cadastro Oficina {final_oficina} Semana {semana}"
                         )
                         st.rerun()  # Força o reset dos campos limpando os inputs
-            except Exception as exc:
-                st.error(f"Erro ao processar validação: {exc}")
 
 
 def _render_bulk_import() -> None:
@@ -346,7 +361,7 @@ def _render_bulk_import() -> None:
     st.markdown(
         f"""
         <div class="import-info-box">
-            <div class="iib-title">📋 Colunas obrigatórias</div>
+            <div class="iib-title">Colunas obrigatórias</div>
             <div class="iib-desc">
                 A planilha deve conter exatamente os cabeçalhos abaixo
                 (respeite maiúsculas, acentuação e espaços):
@@ -363,40 +378,39 @@ def _render_bulk_import() -> None:
         help="Carregue uma planilha no formato de colunas listado acima."
     )
 
-    if uploaded_file is not None:
-        try:
-            df_uploaded = pd.read_excel(uploaded_file)
+    if uploaded_file is None:
+        return
 
-            st.markdown(
-                f"""
-                <div class="form-section-hdr" style="margin-top:1rem;">
-                    <span class="fsh-icon">👁️</span>
-                    <span class="fsh-title">Pré-visualização</span>
-                    <span class="fsh-hint">{len(df_uploaded)} linhas encontradas · exibindo as 10 primeiras</span>
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
-            st.dataframe(df_uploaded.head(10), use_container_width=True)
+    with error_boundary("processar o arquivo importado"):
+        df_uploaded = pd.read_excel(uploaded_file)
 
-            st.markdown("<br>", unsafe_allow_html=True)
-            if st.button("🚀 Confirmar Importação em Lote", use_container_width=True, type="primary"):
-                with st.spinner("Gravando dados no banco..."):
-                    linhas_inseridas = insert_bulk_records(DB_PATH, df_uploaded)
-                    st.cache_data.clear()
+        st.markdown(
+            f"""
+            <div class="form-section-hdr" style="margin-top:1rem;">
+                <span class="fsh-title">Pré-visualização</span>
+                <span class="fsh-hint">{len(df_uploaded)} linhas encontradas · exibindo as 10 primeiras</span>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+        st.dataframe(df_uploaded.head(10), use_container_width=True)
 
-                    if linhas_inseridas > 0:
-                        st.success(
-                            f"Importação concluída! **{linhas_inseridas}** novos registros "
-                            f"foram inseridos com sucesso (duplicados ignorados)."
-                        )
-                        _feedback_sync(
-                            f"dados: importação em lote ({linhas_inseridas} linhas)"
-                        )
-                    else:
-                        st.info(
-                            "Nenhum novo registro foi inserido. "
-                            "Todos os registros já constavam no banco de dados."
-                        )
-        except Exception as exc:
-            st.error(f"Falha ao processar o arquivo: {exc}")
+        st.markdown("<br>", unsafe_allow_html=True)
+        if st.button("Confirmar Importação em Lote", use_container_width=True, type="primary"):
+            with st.spinner("Gravando dados no banco..."):
+                linhas_inseridas = insert_bulk_records(DB_PATH, df_uploaded)
+                st.cache_data.clear()
+
+            if linhas_inseridas > 0:
+                st.success(
+                    f"Importação concluída! **{linhas_inseridas}** novos registros "
+                    f"foram inseridos com sucesso (duplicados ignorados)."
+                )
+                _feedback_sync(
+                    f"dados: importação em lote ({linhas_inseridas} linhas)"
+                )
+            else:
+                st.info(
+                    "Nenhum novo registro foi inserido. "
+                    "Todos os registros já constavam no banco de dados."
+                )

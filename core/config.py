@@ -80,13 +80,16 @@ class IndicatorMeta:
     is_percentage: bool = False
 
 
+# O campo `icon` é mantido por compatibilidade da dataclass, mas fica vazio:
+# a identidade visual dos cards é feita pelo símbolo tipográfico ✦ (ver
+# ui/components/cards.py), sem emojis — alinhado ao design text-only.
 INDICATORS: dict[str, IndicatorMeta] = {
-    "efetivos": IndicatorMeta("efetivos", "Total de Efetivos", Columns.QTD_EFETIVOS, "👥"),
-    "trabalhados": IndicatorMeta("trabalhados", "Total Trabalhados", Columns.QTD_TRABALHADOS, "🛠️"),
-    "ausencia": IndicatorMeta("ausencia", "Total de Ausências", None, "👤"),
-    "contratacoes": IndicatorMeta("contratacoes", "Total de Contratações", Columns.CONTRATACOES, "📈"),
-    "demissoes": IndicatorMeta("demissoes", "Total de Demissões", Columns.DEMISSOES, "📉"),
-    "absenteismo": IndicatorMeta("absenteismo", "Taxa de Absenteísmo", None, "⏱️", is_percentage=True),
+    "efetivos": IndicatorMeta("efetivos", "Total de Efetivos", Columns.QTD_EFETIVOS, ""),
+    "trabalhados": IndicatorMeta("trabalhados", "Total Trabalhados", Columns.QTD_TRABALHADOS, ""),
+    "ausencia": IndicatorMeta("ausencia", "Total de Ausências", None, ""),
+    "contratacoes": IndicatorMeta("contratacoes", "Total de Contratações", Columns.CONTRATACOES, ""),
+    "demissoes": IndicatorMeta("demissoes", "Total de Demissões", Columns.DEMISSOES, ""),
+    "absenteismo": IndicatorMeta("absenteismo", "Taxa de Absenteísmo", None, "", is_percentage=True),
 }
 
 # Ordem de exibição dos cards de KPI
