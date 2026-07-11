@@ -43,20 +43,43 @@ def _run_git(args: list[str], cwd: Path) -> subprocess.CompletedProcess:
     )
 
 
-def _read_github_config() -> dict | None:
+def _ensure_safe_directory(repo_root: Path) -> None:
     """
-    Lê a seção [github] dos secrets do Streamlit. Retorna None se ausente,
-    sinalizando que o sync está desativado (cenário válido em ambiente local).
+    No Streamlit Community Cloud o app roda em um container onde o dono do
+    diretório do repositório (clonado pela plataforma) difere do usuário que
+    executa o processo Python. O Git recusa operar nesse caso com
+    "fatal: detected dubious ownership in repository at '...'", mesmo com o
+    token correto — todo comando git (inclusive o `rev-parse` do status)
+    falha. Registrar o diretório como seguro evita esse bloqueio; é uma
+    operação idempotente e inofensiva em ambiente local.
+    """
+    _run_git(["config", "--global", "--add", "safe.directory", str(repo_root)], repo_root)
+
+
+def _read_github_config() -> tuple[dict | None, str]:
+    """
+    Lê a seção [github] dos secrets do Streamlit.
+
+    Retorna (config, motivo). `config` é None quando o sync está desativado
+    (cenário válido em ambiente local); `motivo` explica exatamente O QUE
+    falta, em vez de um "não configurado" genérico — o que antes tornava
+    impossível diferenciar "esqueci de configurar" de "configurei errado"
+    (nome de seção trocado, campo faltando, TOML malformado, etc.).
     """
     try:
-        cfg = st.secrets["github"]
-    except Exception:  # noqa: BLE001 — secrets ausentes/malformados => sync desativado
-        return None
+        secrets_tem_github = "github" in st.secrets
+    except Exception as exc:  # noqa: BLE001 — ex.: secrets.toml malformado
+        return None, f"não foi possível ler os Secrets do Streamlit ({exc})"
 
+    if not secrets_tem_github:
+        return None, "nenhuma seção [github] encontrada nos Secrets"
+
+    cfg = st.secrets["github"]
     token = cfg.get("token")
     repo = cfg.get("repo")
-    if not token or not repo:
-        return None
+    faltando = [nome for nome, valor in (("token", token), ("repo", repo)) if not valor]
+    if faltando:
+        return None, f"seção [github] encontrada, mas faltam os campos: {', '.join(faltando)}"
 
     return {
         "token": token,
@@ -64,7 +87,7 @@ def _read_github_config() -> dict | None:
         "branch": cfg.get("branch", "main"),
         "committer_name": cfg.get("committer_name", "App Postos Bot"),
         "committer_email": cfg.get("committer_email", "bot@example.com"),
-    }
+    }, ""
 
 
 def _sanitize(text: str, token: str) -> str:
@@ -87,21 +110,23 @@ def get_sync_status() -> tuple[bool, str]:
     disco é efêmero, então se o sync estiver desativado, os cadastros somem no
     próximo reinício — e o usuário precisa saber disso antes de gravar.
     """
-    cfg = _read_github_config()
+    cfg, motivo = _read_github_config()
     if cfg is None:
         return (
             False,
-            "Sincronização com o GitHub DESATIVADA (secrets não configurados). "
+            f"Sincronização com o GitHub DESATIVADA: {motivo}. "
             "No Streamlit Cloud o armazenamento é temporário: novos lançamentos "
-            "serão perdidos quando o app reiniciar. Configure a seção [github] em "
-            "Settings → Secrets para que os dados sejam salvos de forma permanente.",
+            "serão perdidos quando o app reiniciar. Confira a seção [github] em "
+            "Settings → Secrets (e reinicie o app após salvar os Secrets).",
         )
 
+    _ensure_safe_directory(BASE_DIR)
     check = _run_git(["rev-parse", "--is-inside-work-tree"], BASE_DIR)
     if check.returncode != 0:
         return (
             False,
-            "Sincronização indisponível: a aplicação não está em um repositório git.",
+            "Sincronização indisponível: a aplicação não está em um repositório git "
+            f"({_sanitize(check.stderr, cfg['token']) or 'motivo desconhecido'}).",
         )
 
     return True, "Sincronização com o GitHub ativa. Novos lançamentos serão persistidos."
@@ -114,18 +139,22 @@ def sync_db_to_github(commit_message: str) -> tuple[bool, str]:
     Retorna (sucesso, mensagem). Nunca levanta exceção: falhas viram (False, msg)
     para não interromper o fluxo de cadastro.
     """
-    cfg = _read_github_config()
+    cfg, motivo = _read_github_config()
     if cfg is None:
-        return False, "Sincronização desativada (secrets do GitHub não configurados)."
+        return False, f"Sincronização desativada: {motivo}."
 
     repo_root = BASE_DIR
     token = cfg["token"]
     branch = cfg["branch"]
 
     # 0. Confirma que estamos dentro de um repositório git.
+    _ensure_safe_directory(repo_root)
     check = _run_git(["rev-parse", "--is-inside-work-tree"], repo_root)
     if check.returncode != 0:
-        return False, "Sincronização indisponível: a pasta não é um repositório git."
+        return False, (
+            "Sincronização indisponível: a pasta não é um repositório git "
+            f"({_sanitize(check.stderr, token) or 'motivo desconhecido'})."
+        )
 
     # 1. Identidade do committer (necessária em clone novo, como no Cloud).
     _run_git(["config", "user.name", cfg["committer_name"]], repo_root)
