@@ -138,134 +138,138 @@ def render_cadastro_page(df_full: pd.DataFrame) -> None:
 def _render_manual_form(
     frete_options: list[str], mp_options: list[str], oficina_options: list[str]
 ) -> None:
-    st.markdown("##### Novo Registro")
-    st.caption("Preencha as informações abaixo para gravar um novo registro no banco de dados.")
+    with st.container(key="cadastro_manual_form"):
+        st.markdown("##### Novo Registro")
+        st.caption("Preencha as informações abaixo para gravar um novo registro no banco de dados.")
 
-    # ── Seção 1: Identificação ────────────────────────────────────────────
-    st.markdown(
-        """
-        <div class="form-section-hdr">
-            <span class="fsh-num">01</span>
-            <span class="fsh-title">Identificação</span>
-            <span class="fsh-hint">Oficina · Matéria-prima · Transportador</span>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-    # Renderiza os inputs diretamente (sem st.form) para habilitar re-execução instantânea
-    # na mudança dos selectboxes ("Outro...").
-    col1, col2, col3 = st.columns(3)
-
-    with col1:
-        oficina_sel = st.selectbox(
-            "Oficina",
-            options=oficina_options + [" Outro... (Novo cadastro)"],
-            index=0,
-            help="Selecione uma oficina existente ou marque 'Outro...' para digitar uma nova."
-        )
-        nova_oficina = ""
-        if oficina_sel == " Outro... (Novo cadastro)":
-            nova_oficina = st.text_input(
-                "Nome da Nova Oficina",
-                placeholder="Ex: OFICINA EXCELENCIA LTDA",
-                help="Digite o nome completo da nova oficina."
+        # ── Seção 1: Identificação ────────────────────────────────────────
+        with st.container(border=True):
+            st.markdown(
+                """
+                <div class="form-section-hdr">
+                    <span class="fsh-num">01</span>
+                    <span class="fsh-title">Identificação</span>
+                    <span class="fsh-hint">Oficina · Matéria-prima · Transportador</span>
+                </div>
+                """,
+                unsafe_allow_html=True,
             )
 
-    with col2:
-        mp_sel = st.selectbox(
-            "Matéria-prima (MP)",
-            options=mp_options + [" Outro... (Novo cadastro)"],
-            index=0,
-        )
-        nova_mp = ""
-        if mp_sel == " Outro... (Novo cadastro)":
-            nova_mp = st.text_input(
-                "Nome da Nova MP",
-                placeholder="Ex: ALGODAO",
+            # Renderiza os inputs diretamente (sem st.form) para habilitar re-execução
+            # instantânea na mudança dos selectboxes ("Outro...").
+            col1, col2, col3 = st.columns(3)
+
+            with col1:
+                oficina_sel = st.selectbox(
+                    "Oficina",
+                    options=oficina_options + [" Outro... (Novo cadastro)"],
+                    index=0,
+                    help="Selecione uma oficina existente ou marque 'Outro...' para digitar uma nova."
+                )
+                nova_oficina = ""
+                if oficina_sel == " Outro... (Novo cadastro)":
+                    nova_oficina = st.text_input(
+                        "Nome da Nova Oficina",
+                        placeholder="Ex: OFICINA EXCELENCIA LTDA",
+                        help="Digite o nome completo da nova oficina."
+                    )
+
+            with col2:
+                mp_sel = st.selectbox(
+                    "Matéria-prima (MP)",
+                    options=mp_options + [" Outro... (Novo cadastro)"],
+                    index=0,
+                )
+                nova_mp = ""
+                if mp_sel == " Outro... (Novo cadastro)":
+                    nova_mp = st.text_input(
+                        "Nome da Nova MP",
+                        placeholder="Ex: ALGODAO",
+                    )
+
+            with col3:
+                frete_sel = st.selectbox(
+                    "Frete (Transportador)",
+                    options=frete_options + [" Outro... (Novo cadastro)"],
+                    index=0,
+                )
+                novo_frete = ""
+                if frete_sel == " Outro... (Novo cadastro)":
+                    novo_frete = st.text_input(
+                        "Nome do Novo Transportador",
+                        placeholder="Ex: RAPIDO BRASIL",
+                    )
+
+        # ── Seção 2: Período e Semana ───────────────────────────────────────
+        with st.container(border=True):
+            st.markdown(
+                """
+                <div class="form-section-hdr">
+                    <span class="fsh-num">02</span>
+                    <span class="fsh-title">Período e Semana</span>
+                    <span class="fsh-hint">Datas de referência · Semana calculada automaticamente</span>
+                </div>
+                """,
+                unsafe_allow_html=True,
             )
 
-    with col3:
-        frete_sel = st.selectbox(
-            "Frete (Transportador)",
-            options=frete_options + [" Outro... (Novo cadastro)"],
-            index=0,
-        )
-        novo_frete = ""
-        if frete_sel == " Outro... (Novo cadastro)":
-            novo_frete = st.text_input(
-                "Nome do Novo Transportador",
-                placeholder="Ex: RAPIDO BRASIL",
+            col_dt1, col_dt2, col_sem = st.columns([1.2, 1.2, 0.8])
+
+            with col_dt1:
+                data_efetivos = st.date_input(
+                    "Data Efetivos (Planejado)",
+                    value=datetime.date.today(),
+                    help="Data de referência para a quantidade planejada de efetivos."
+                )
+
+            with col_dt2:
+                mesma_data = st.checkbox("Mesma data para 'Trabalhados'", value=True)
+                if mesma_data:
+                    data_trabalhados = data_efetivos
+                else:
+                    data_trabalhados = st.date_input(
+                        "Data Trabalhados (Realizado)",
+                        value=data_efetivos,
+                        help="Data de referência para a quantidade real de trabalhadores presentes."
+                    )
+
+            with col_sem:
+                semana_calculada = data_efetivos.isocalendar()[1]
+                semana = st.number_input(
+                    "Semana",
+                    min_value=1,
+                    max_value=53,
+                    value=semana_calculada,
+                    step=1,
+                    help="Calculado automaticamente com base na 'Data Efetivos', mas você pode ajustar se necessário."
+                )
+
+        # ── Seção 3: Quantidades ─────────────────────────────────────────────
+        with st.container(border=True):
+            st.markdown(
+                """
+                <div class="form-section-hdr">
+                    <span class="fsh-num">03</span>
+                    <span class="fsh-title">Quantidades</span>
+                    <span class="fsh-hint">Efetivos planejados · Presença realizada · Movimentação</span>
+                </div>
+                """,
+                unsafe_allow_html=True,
             )
 
-    # ── Seção 2: Período e Semana ─────────────────────────────────────────
-    st.markdown(
-        """
-        <div class="form-section-hdr">
-            <span class="fsh-num">02</span>
-            <span class="fsh-title">Período e Semana</span>
-            <span class="fsh-hint">Datas de referência · Semana calculada automaticamente</span>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+            col_n1, col_n2, col_n3, col_n4 = st.columns(4)
 
-    col_dt1, col_dt2, col_sem = st.columns(3)
+            with col_n1:
+                qtd_efetivos = st.number_input("QTD Efetivos", min_value=0, value=0, step=1, help="Planejado")
+            with col_n2:
+                qtd_trabalhados = st.number_input("QTD Trabalhados", min_value=0, value=0, step=1, help="Realizado")
+            with col_n3:
+                contratacoes = st.number_input("Contratações", min_value=0, value=0, step=1)
+            with col_n4:
+                demissoes = st.number_input("Demissões", min_value=0, value=0, step=1)
 
-    with col_dt1:
-        data_efetivos = st.date_input(
-            "Data Efetivos (Planejado)",
-            value=datetime.date.today(),
-            help="Data de referência para a quantidade planejada de efetivos."
-        )
-
-    with col_dt2:
-        mesma_data = st.checkbox("Mesma data para 'Trabalhados'", value=True)
-        if mesma_data:
-            data_trabalhados = data_efetivos
-        else:
-            data_trabalhados = st.date_input(
-                "Data Trabalhados (Realizado)",
-                value=data_efetivos,
-                help="Data de referência para a quantidade real de trabalhadores presentes."
-            )
-
-    with col_sem:
-        semana_calculada = data_efetivos.isocalendar()[1]
-        semana = st.number_input(
-            "Número da Semana",
-            min_value=1,
-            max_value=53,
-            value=semana_calculada,
-            step=1,
-            help="Calculado automaticamente com base na 'Data Efetivos', mas você pode ajustar se necessário."
-        )
-
-    # ── Seção 3: Quantidades ──────────────────────────────────────────────
-    st.markdown(
-        """
-        <div class="form-section-hdr">
-            <span class="fsh-num">03</span>
-            <span class="fsh-title">Quantidades</span>
-            <span class="fsh-hint">Efetivos planejados · Presença realizada · Movimentação</span>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-    col_n1, col_n2, col_n3, col_n4 = st.columns(4)
-
-    with col_n1:
-        qtd_efetivos = st.number_input("QTD Efetivos (Planejado)", min_value=0, value=0, step=1)
-    with col_n2:
-        qtd_trabalhados = st.number_input("QTD Trabalhados (Realizado)", min_value=0, value=0, step=1)
-    with col_n3:
-        contratacoes = st.number_input("Contratações", min_value=0, value=0, step=1)
-    with col_n4:
-        demissoes = st.number_input("Demissões", min_value=0, value=0, step=1)
-
-    st.markdown("<br>", unsafe_allow_html=True)
-    btn_gravar = st.button("Gravar Registro", use_container_width=True, type="primary")
+        st.markdown("<br>", unsafe_allow_html=True)
+        btn_gravar = st.button("Gravar Registro", use_container_width=True, type="primary")
 
     if btn_gravar:
         # Resolve os valores selecionados (existentes ou novos)

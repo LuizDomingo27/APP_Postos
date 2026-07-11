@@ -512,6 +512,46 @@ button[data-testid="stBaseButton-primary"]:hover {{
     line-height: 1.55;
 }}
 
+/* ---------- Formulario Manual: centralizado + cards modernos ---------- */
+.st-key-cadastro_manual_form {{
+    max-width: 800px;
+    margin: 0 auto;
+}}
+
+.st-key-cadastro_manual_form div[data-testid="stVerticalBlock"][data-test-scroll-behavior="normal"] {{
+    border-radius: var(--radius-md) !important;
+    border-color: var(--card-border) !important;
+    background: var(--card-bg);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+    padding: 1rem 1.1rem 0.3rem !important;
+    margin-bottom: 1.1rem;
+}}
+
+/* Bordas modernas + foco com glow teal nos campos de texto, data e select */
+.st-key-cadastro_manual_form input,
+.st-key-cadastro_manual_form div[data-baseweb="select"] > div,
+.st-key-cadastro_manual_form div[data-baseweb="base-input"] {{
+    border-radius: var(--radius-sm) !important;
+    border: 1.5px solid var(--card-border) !important;
+    background-color: #FFFFFF !important;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}}
+
+.st-key-cadastro_manual_form input:focus {{
+    border-color: var(--accent) !important;
+    box-shadow: 0 0 0 3px var(--accent-soft) !important;
+}}
+
+.st-key-cadastro_manual_form div[data-baseweb="select"]:focus-within > div {{
+    border-color: var(--accent) !important;
+    box-shadow: 0 0 0 3px var(--accent-soft) !important;
+}}
+
+/* Campos numericos compactos — nao precisam ocupar a largura total da coluna */
+.st-key-cadastro_manual_form div[data-testid="stNumberInput"] {{
+    max-width: 140px;
+}}
+
 /* ---------- Chips de coluna ---------- */
 .col-chips {{
     display: flex;
