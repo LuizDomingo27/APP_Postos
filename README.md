@@ -2,7 +2,8 @@
 
 Dashboard em **Python + Streamlit** para acompanhamento de efetivos,
 produtividade, contratações/demissões e absenteísmo nas oficinas
-parceiras, a partir da planilha de controle (`Dataset/POSTOS.xlsx`).
+parceiras. Os dados vivem na tabela `postos` de um banco **Supabase**
+(Postgres gerenciado).
 
 ---
 
@@ -16,13 +17,21 @@ source .venv/bin/activate        # Windows: .venv\Scripts\activate
 # 2. Instalar dependências
 pip install -r requirements.txt
 
-# 3. Rodar a aplicação
+# 3. Configurar o Supabase
+#    - Garanta que a tabela `postos` existe (execute uma vez o SQL em
+#      db_migrations/migrations/20260720120000_create_postos_table.sql
+#      no Supabase Dashboard → SQL Editor).
+#    - Copie .streamlit/secrets.toml.example para .streamlit/secrets.toml
+#      e preencha [supabase] com a URL do projeto e a service_role key.
+
+# 4. Rodar a aplicação
 streamlit run app.py
 ```
 
-A planilha de origem já está em `Dataset/POSTOS.xlsx`. Para usar uma
-planilha atualizada, basta substituir esse arquivo mantendo o mesmo
-nome de aba (`Planilha1`) e as mesmas colunas.
+Para popular a tabela `postos` a partir de uma planilha Excel (uma única
+vez, ou para dados históricos), use
+`python -m scripts.migrate_excel_to_supabase Dataset/POSTOS.xlsx` — ou
+importe pela própria tela "Lançamento de Dados → Importação em Lote".
 
 ---
 
@@ -40,8 +49,10 @@ APP_PostosTrabalho/
 ├── core/
 │   ├── config.py                # Constantes: colunas, cores, indicadores
 │   └── utils.py                 # Helpers genéricos (formatação, % , cor)
-├── services/                     # Regra de negócio (sem Streamlit aqui)
-│   ├── data_loader.py            # Leitura + validação da planilha bruta
+├── services/
+│   ├── supabase_client.py        # Client Supabase (singleton) + paginação
+│   ├── data_loader.py            # Leitura + validação da tabela `postos`
+│   ├── data_writer.py            # Escrita (manual e em lote) na tabela `postos`
 │   ├── data_cleaning.py          # Normalização e regras de qualidade
 │   ├── indicators_service.py     # Cálculo dos KPIs (cards)
 │   └── analytics_service.py      # Séries semanais/mensais + variação %

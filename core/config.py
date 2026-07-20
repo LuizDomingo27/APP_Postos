@@ -20,7 +20,14 @@ from dataclasses import dataclass
 BASE_DIR = Path(__file__).resolve().parent.parent
 DATASET_PATH = BASE_DIR / "Dataset" / "POSTOS.xlsx"
 DATASET_SHEET_NAME = "Planilha1"
-DB_PATH = BASE_DIR / "Dataset" / "postos.db"
+
+# ---------------------------------------------------------------------------
+# Banco de dados — Supabase
+# ---------------------------------------------------------------------------
+# Nome da tabela no Supabase (schema `public`) que armazena os lançamentos.
+# As credenciais (URL + service_role key) ficam em `.streamlit/secrets.toml`,
+# nunca aqui — ver `services/supabase_client.py`.
+SUPABASE_TABLE_POSTOS = "postos"
 
 # ---------------------------------------------------------------------------
 # Metadados da aplicação
@@ -30,9 +37,11 @@ APP_ICON = "🧵"
 APP_SUBTITLE = "Acompanhamento de efetivos, produtividade e absenteísmo por oficina"
 
 # ---------------------------------------------------------------------------
-# Nomes das colunas BRUTAS, exatamente como vêm da planilha original.
-# Centralizar aqui é o que permite que, se a planilha mudar o nome de uma
-# coluna, o ajuste seja feito em UM único lugar.
+# Nomes das colunas BRUTAS, exatamente como vêm da planilha Excel original.
+# Esse contrato é usado na importação em lote (upload de .xlsx) e no script
+# `scripts/migrate_excel_to_supabase.py`. Centralizar aqui é o que permite
+# que, se a planilha mudar o nome de uma coluna, o ajuste seja feito em UM
+# único lugar.
 # ---------------------------------------------------------------------------
 class RawColumns:
     FRETE = "Frete"
@@ -66,6 +75,28 @@ class Columns:
     MES_LABEL = "mes_label"      # derivado: rótulo amigável do mês
     OFICINA_MP = "oficina_mp"    # derivado: "<Oficina> <MP>", ex.: "DI3 CONFECCOES LTDA Malha"
     ANO = "ano"                  # derivado: ano da data de efetivos (YYYY)
+
+
+# ---------------------------------------------------------------------------
+# Tradução entre o contrato "bruto" (RawColumns, cabeçalhos da planilha
+# Excel) e as colunas reais da tabela `postos` no Supabase (snake_case,
+# mesmos nomes de `Columns` para os campos persistidos). Um único lugar
+# evita divergência entre `services/data_loader.py` (leitura) e
+# `services/data_writer.py` (escrita).
+# ---------------------------------------------------------------------------
+RAW_TO_DB_COLUMNS: dict[str, str] = {
+    RawColumns.FRETE: Columns.FRETE,
+    RawColumns.MP: Columns.MP,
+    RawColumns.OFICINA: Columns.OFICINA,
+    RawColumns.DATA_EFETIVOS: Columns.DATA_EFETIVOS,
+    RawColumns.QTD_EFETIVOS: Columns.QTD_EFETIVOS,
+    RawColumns.DATA_TRABALHADOS: Columns.DATA_TRABALHADOS,
+    RawColumns.QTD_TRABALHADOS: Columns.QTD_TRABALHADOS,
+    RawColumns.CONTRATACAO: Columns.CONTRATACOES,
+    RawColumns.DEMISSAO: Columns.DEMISSOES,
+    RawColumns.SEMANA: Columns.SEMANA,
+}
+DB_TO_RAW_COLUMNS: dict[str, str] = {db: raw for raw, db in RAW_TO_DB_COLUMNS.items()}
 
 
 # ---------------------------------------------------------------------------

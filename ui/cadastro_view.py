@@ -4,11 +4,9 @@ ui/cadastro_view.py
 Camada de visualização (UI) separada para a funcionalidade de cadastro
 de dados (manual e importação em lote).
 
-Persistência: no Streamlit Community Cloud o disco é efêmero, então todo
-lançamento só sobrevive a um reinício se for sincronizado com o GitHub. Por
-isso esta página exibe, no topo, um aviso claro do estado da sincronização —
-para que o usuário nunca grave achando que os dados ficarão salvos quando, na
-verdade, o sync está desativado.
+Persistência: os lançamentos são gravados diretamente na tabela `postos` do
+Supabase (Postgres gerenciado) — persistência real, sem o workaround de
+sincronizar um arquivo local com o GitHub que era necessário no SQLite.
 """
 
 from __future__ import annotations
@@ -17,34 +15,9 @@ import datetime
 import pandas as pd
 import streamlit as st
 
-from core.config import DB_PATH, Columns
+from core.config import Columns
 from core.errors import error_boundary
 from services.data_writer import insert_record, insert_bulk_records, check_record_exists
-from services.git_sync import get_sync_status, sync_db_to_github
-
-
-def _render_sync_banner() -> None:
-    """
-    Mostra o estado da persistência no topo da página de cadastro.
-
-    Quando a sincronização está desativada, este é o aviso que explica a causa
-    da "perda de dados após reiniciar": sem o sync configurado, o Cloud apaga o
-    banco a cada reinício. Assim o problema fica visível ANTES de gravar.
-    """
-    enabled, msg = get_sync_status()
-    if enabled:
-        st.success(msg, icon=":material/cloud_done:")
-    else:
-        st.warning(msg, icon=":material/cloud_off:")
-
-
-def _feedback_sync(commit_message: str) -> None:
-    """Sincroniza o banco com o GitHub e mostra o resultado sem quebrar o cadastro."""
-    ok, msg = sync_db_to_github(commit_message)
-    if ok:
-        st.caption(msg)
-    else:
-        st.warning(f"Registro gravado localmente, mas a sincronização falhou: {msg}")
 
 
 @st.dialog("Confirmar Lançamento com Valores Zerados")
@@ -79,7 +52,6 @@ def confirm_zero_dialog(record_data: dict) -> None:
         if st.button("Sim, salvar mesmo assim", use_container_width=True):
             with error_boundary("salvar o registro"):
                 insert_record(
-                    db_path=DB_PATH,
                     frete=record_data["frete"],
                     mp=record_data["mp"],
                     oficina=record_data["oficina"],
@@ -93,10 +65,6 @@ def confirm_zero_dialog(record_data: dict) -> None:
                 )
                 st.cache_data.clear()
                 st.success("Registro salvo com sucesso!")
-                _feedback_sync(
-                    f"dados: cadastro Oficina {record_data['oficina']} "
-                    f"Semana {record_data['semana']}"
-                )
                 st.rerun()
     with col2:
         if st.button("Não, voltar e ajustar", use_container_width=True):
@@ -116,8 +84,6 @@ def render_cadastro_page(df_full: pd.DataFrame) -> None:
         """,
         unsafe_allow_html=True,
     )
-
-    _render_sync_banner()
 
     tab_manual, tab_lote = st.tabs(["Formulário Manual", "Importação em Lote"])
 
@@ -292,7 +258,7 @@ def _render_manual_form(
         else:
             with error_boundary("validar e gravar o registro"):
                 # 1. Validação de Duplicidade (Oficina + MP + Semana)
-                if check_record_exists(DB_PATH, final_oficina, final_mp, semana):
+                if check_record_exists(final_oficina, final_mp, semana):
                     st.error(
                         f"**Erro de Duplicidade:** Já existe um lançamento para a Oficina "
                         f"**'{final_oficina}'** e Matéria-prima **'{final_mp}'** na **Semana {semana}**."
@@ -326,7 +292,6 @@ def _render_manual_form(
                     else:
                         # Gravação direta sem zeros
                         insert_record(
-                            db_path=DB_PATH,
                             frete=record_data["frete"],
                             mp=record_data["mp"],
                             oficina=record_data["oficina"],
@@ -342,9 +307,6 @@ def _render_manual_form(
                         st.success(
                             f"Sucesso! Registro gravado para a Oficina '{final_oficina}' "
                             f"(Semana {semana}). Os dados já foram computados no Dashboard!"
-                        )
-                        _feedback_sync(
-                            f"dados: cadastro Oficina {final_oficina} Semana {semana}"
                         )
                         st.rerun()  # Força o reset dos campos limpando os inputs
 
@@ -402,16 +364,13 @@ def _render_bulk_import() -> None:
         st.markdown("<br>", unsafe_allow_html=True)
         if st.button("Confirmar Importação em Lote", use_container_width=True, type="primary"):
             with st.spinner("Gravando dados no banco..."):
-                linhas_inseridas = insert_bulk_records(DB_PATH, df_uploaded)
+                linhas_inseridas = insert_bulk_records(df_uploaded)
                 st.cache_data.clear()
 
             if linhas_inseridas > 0:
                 st.success(
                     f"Importação concluída! **{linhas_inseridas}** novos registros "
                     f"foram inseridos com sucesso (duplicados ignorados)."
-                )
-                _feedback_sync(
-                    f"dados: importação em lote ({linhas_inseridas} linhas)"
                 )
             else:
                 st.info(

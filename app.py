@@ -20,10 +20,10 @@ from __future__ import annotations
 import pandas as pd
 import streamlit as st
 
-from core.config import APP_ICON, APP_SUBTITLE, APP_TITLE, DATASET_PATH
+from core.config import APP_ICON, APP_SUBTITLE, APP_TITLE
 from core.errors import error_boundary, guard
 from services.data_cleaning import clean_dataframe
-from services.data_loader import load_raw_dataframe
+from services.data_loader import REQUIRED_RAW_COLUMNS, EmptyDataError, load_raw_dataframe
 from ui.cadastro_view import render_cadastro_page
 from ui.components.filters import apply_filters, render_top_filters
 from ui.layout import (
@@ -40,8 +40,22 @@ _PAGE_LANCAMENTO = "lancamento"
 
 @st.cache_data(show_spinner="Carregando dados de postos de trabalho...")
 def _load_clean_data() -> pd.DataFrame:
-    df_raw = load_raw_dataframe(DATASET_PATH)
+    df_raw = load_raw_dataframe()
     return clean_dataframe(df_raw)
+
+
+def _load_data_or_empty() -> pd.DataFrame:
+    """
+    Carrega os dados limpos. Se a tabela `postos` ainda não tiver nenhum
+    registro (primeiro uso do app, antes da importação inicial), devolve um
+    DataFrame vazio com o contrato de colunas correto em vez de propagar o
+    erro — assim a página de Lançamento de Dados continua acessível para o
+    usuário cadastrar o primeiro registro.
+    """
+    try:
+        return _load_clean_data()
+    except EmptyDataError:
+        return clean_dataframe(pd.DataFrame(columns=REQUIRED_RAW_COLUMNS))
 
 
 def render_navbar() -> str:
@@ -126,12 +140,19 @@ def main() -> None:
 
     page = render_navbar()
 
-    # A carga de dados é fatal: sem dados não há o que exibir em nenhuma página.
+    # Fatal apenas para falhas reais (config/conexão/schema) — tabela vazia
+    # é tratada como estado válido de primeiro uso (ver _load_data_or_empty).
     with error_boundary("carregar os dados de postos de trabalho", fatal=True):
-        df = _load_clean_data()
+        df = _load_data_or_empty()
 
     if page == _PAGE_LANCAMENTO:
         render_cadastro_page(df)
+    elif df.empty:
+        st.info(
+            "Ainda não há registros na tabela **postos**. Acesse "
+            "**Lançamento de Dados** para cadastrar o primeiro lançamento "
+            "manualmente ou importar uma planilha em lote."
+        )
     else:
         _render_dashboard(df)
 
