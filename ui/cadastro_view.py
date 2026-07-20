@@ -257,8 +257,10 @@ def _render_manual_form(
                 st.error(erro)
         else:
             with error_boundary("validar e gravar o registro"):
-                # 1. Validação de Duplicidade (Oficina + MP + Semana)
-                if check_record_exists(final_oficina, final_mp, semana):
+                # 1. Validação de Duplicidade (Oficina + MP + Semana + Data Efetivos)
+                if check_record_exists(
+                    final_oficina, final_mp, semana, data_efetivos.strftime("%Y-%m-%d")
+                ):
                     st.error(
                         f"**Erro de Duplicidade:** Já existe um lançamento para a Oficina "
                         f"**'{final_oficina}'** e Matéria-prima **'{final_mp}'** na **Semana {semana}**."

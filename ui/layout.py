@@ -71,6 +71,11 @@ def render_kpi_section(df_filtered: pd.DataFrame) -> None:
     render_kpi_cards(cards)
 
 
+# Indicadores em que subir é ruim e cair é bom — cor invertida no gráfico
+# de evolução (queda = verde, alta = vermelho).
+_INDICADORES_INVERTIDOS = {"absenteismo", "ausencia", "demissoes"}
+
+
 def _indicator_selector(tab_key: str) -> str:
     options = list(KPI_ORDER)
     labels = [INDICATORS[k].label for k in options]
@@ -100,6 +105,7 @@ def render_weekly_tab(df_filtered: pd.DataFrame) -> None:
     chart_html = build_evolution_chart(
         serie, x_col="semana", x_tick_labels=x_labels,
         value_label=meta.label, is_percentage=meta.is_percentage,
+        invert_trend=(indicator_key in _INDICADORES_INVERTIDOS),
     )
     components.html(chart_html, height=400, scrolling=False)
 
@@ -125,6 +131,7 @@ def render_monthly_tab(df_filtered: pd.DataFrame) -> None:
     chart_html = build_evolution_chart(
         serie, x_col="ano_mes", x_tick_labels=x_labels,
         value_label=meta.label, is_percentage=meta.is_percentage,
+        invert_trend=(indicator_key in _INDICADORES_INVERTIDOS),
     )
     components.html(chart_html, height=400, scrolling=False)
 

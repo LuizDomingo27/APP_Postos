@@ -16,10 +16,16 @@ from services.supabase_client import fetch_all_rows, get_supabase_client
 _BULK_INSERT_BATCH_SIZE = 500
 
 
-def check_record_exists(oficina: str, mp: str, semana: int) -> bool:
+def check_record_exists(oficina: str, mp: str, semana: int, data_efetivos: str) -> bool:
     """
-    Verifica se já existe um registro para a combinação de Oficina, MP e
-    Semana na tabela `postos` do Supabase.
+    Verifica se já existe um registro para a combinação de Oficina, MP,
+    Semana e Data Efetivos na tabela `postos` do Supabase.
+
+    `data_efetivos` entra na chave porque o número da semana se repete a
+    cada ano (ex.: Semana 28 existe tanto em 2025 quanto em 2026) — sem a
+    data, um lançamento novo de um ano seria confundido com o de outro ano
+    para a mesma Oficina/MP/Semana e seria erroneamente tratado como
+    duplicado.
     """
     oficina_clean = str(oficina).strip()
     mp_clean = str(mp).strip().upper()
@@ -32,6 +38,7 @@ def check_record_exists(oficina: str, mp: str, semana: int) -> bool:
             .eq(Columns.OFICINA, oficina_clean)
             .eq(Columns.MP, mp_clean)
             .eq(Columns.SEMANA, int(semana))
+            .eq(Columns.DATA_EFETIVOS, str(data_efetivos))
             .limit(1)
             .execute()
         )
@@ -79,8 +86,15 @@ def insert_record(
 def insert_bulk_records(df: pd.DataFrame) -> int:
     """
     Insere múltiplos registros na tabela `postos` do Supabase, ignorando
-    qualquer linha cuja combinação (Oficinas, MP, Semana) já exista no banco.
-    Retorna o número de linhas novas inseridas com sucesso.
+    qualquer linha cuja combinação (Oficinas, MP, Semana, Data Efetivos) já
+    exista no banco. Retorna o número de linhas novas inseridas com sucesso.
+
+    A Data Efetivos entra na chave de deduplicação porque o número da
+    semana se repete a cada ano — sem a data, um lançamento novo de um ano
+    seria confundido com o de outro ano para a mesma Oficina/MP/Semana e
+    seria erroneamente ignorado como duplicado (bug corrigido: 92
+    registros da Semana 28/2026 nunca foram inseridos por esse motivo,
+    pois colidiam com registros da Semana 28/2025 já existentes).
 
     `df` deve conter as colunas BRUTAS (cabeçalhos originais da planilha
     Excel, ver `core.config.RawColumns`) — mesmo contrato usado pelo upload
@@ -119,12 +133,19 @@ def insert_bulk_records(df: pd.DataFrame) -> int:
 
     client = get_supabase_client()
     try:
-        # 1. Carrega as chaves (Oficina, MP, Semana) já existentes no Supabase
+        # 1. Carrega as chaves (Oficina, MP, Semana, Data Efetivos) já existentes no Supabase
         existing_rows = fetch_all_rows(
-            client, SUPABASE_TABLE_POSTOS, columns=f"{Columns.OFICINA},{Columns.MP},{Columns.SEMANA}"
+            client,
+            SUPABASE_TABLE_POSTOS,
+            columns=f"{Columns.OFICINA},{Columns.MP},{Columns.SEMANA},{Columns.DATA_EFETIVOS}",
         )
         existing_keys = {
-            (str(r[Columns.OFICINA]).strip(), str(r[Columns.MP]).strip().upper(), int(r[Columns.SEMANA]))
+            (
+                str(r[Columns.OFICINA]).strip(),
+                str(r[Columns.MP]).strip().upper(),
+                int(r[Columns.SEMANA]),
+                str(r[Columns.DATA_EFETIVOS])[:10],
+            )
             for r in existing_rows
         }
 
@@ -134,13 +155,14 @@ def insert_bulk_records(df: pd.DataFrame) -> int:
                 df_clean[RawColumns.OFICINA],
                 df_clean[RawColumns.MP],
                 df_clean[RawColumns.SEMANA],
+                df_clean[RawColumns.DATA_EFETIVOS],
             )
         )
 
         # 3. Filtra apenas registros que não existem no banco e remove duplicados do próprio lote
         df_to_insert = df_clean[~df_clean["_key"].isin(existing_keys)].drop(columns=["_key"])
         df_to_insert = df_to_insert.drop_duplicates(
-            subset=[RawColumns.OFICINA, RawColumns.MP, RawColumns.SEMANA]
+            subset=[RawColumns.OFICINA, RawColumns.MP, RawColumns.SEMANA, RawColumns.DATA_EFETIVOS]
         )
 
         if len(df_to_insert) == 0:

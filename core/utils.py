@@ -69,14 +69,20 @@ def pct_change(current: float, previous: float) -> float:
 # ---------------------------------------------------------------------------
 # Helpers de cor (usados pelos gráficos para indicar tendência)
 # ---------------------------------------------------------------------------
-def trend_color(delta: Optional[float]) -> str:
-    """Retorna a cor do tema correspondente à tendência (alta/baixa/neutra)."""
+def trend_color(delta: Optional[float], invert: bool = False) -> str:
+    """
+    Retorna a cor do tema correspondente à tendência (alta/baixa/neutra).
+
+    invert=True inverte a semântica alta=positivo/baixa=negativo — usado por
+    indicadores onde subir é ruim (ex.: absenteísmo), em que queda é que
+    representa melhora e deve aparecer em verde.
+    """
     if delta is None or (isinstance(delta, float) and math.isnan(delta)):
         return Theme.NEUTRAL
     if delta > 0:
-        return Theme.POSITIVE
+        return Theme.NEGATIVE if invert else Theme.POSITIVE
     if delta < 0:
-        return Theme.NEGATIVE
+        return Theme.POSITIVE if invert else Theme.NEGATIVE
     return Theme.NEUTRAL
 
 

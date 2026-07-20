@@ -92,6 +92,7 @@ def build_evolution_chart(
     x_tick_labels: list[str],
     value_label: str,
     is_percentage: bool = False,
+    invert_trend: bool = False,
 ) -> str:
     """
     Retorna uma string HTML com o gráfico de linha de evolução ECharts 5.
@@ -114,7 +115,9 @@ def build_evolution_chart(
     df_plot["tooltip_variacao"] = df_plot["variacao_pct"].apply(
         lambda d: format_delta_br(d) if d == d else "—"
     )
-    df_plot["trend_color"] = df_plot["variacao_pct"].apply(trend_color)
+    df_plot["trend_color"] = df_plot["variacao_pct"].apply(
+        lambda d: trend_color(d, invert=invert_trend)
+    )
     df_plot["tooltip_mm_curto"] = df_plot["mm_curto"].apply(
         lambda v: _format_value(v, is_percentage) if pd.notna(v) else "—"
     )
@@ -342,7 +345,7 @@ def build_evolution_chart(
                                 "show": True,
                                 "position": "insideEndTop",
                                 "formatter": media_label,
-                                "color": Theme.ACCENT_SOFT,
+                                "color": "#1a1a1a",
                                 "fontWeight": "bold",
                                 "fontSize": 11,
                                 "fontFamily": "Inter, sans-serif",
@@ -677,7 +680,7 @@ function(params) {
                                 "show": True,
                                 "position": "insideEndTop",
                                 "formatter": f"Média: {format_percent_br(media_geral)}",
-                                "color": Theme.NEUTRAL,
+                                "color": "#1a1a1a",
                                 "fontWeight": "bold",
                                 "fontSize": 11,
                                 "fontFamily": "Inter, sans-serif",
