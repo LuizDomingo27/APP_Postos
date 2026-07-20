@@ -406,9 +406,10 @@ function(params) {
   var p20 = params.find(function(p) { return p.seriesName === 'MM20'; });
   if (p4  && p4.data)  mmCurto = (typeof p4.data  === 'object' ? p4.data.tooltip_mm_curto  : p4.data)  || '—';
   if (p20 && p20.data) mmLongo = (typeof p20.data === 'object' ? p20.data.tooltip_mm_longo : p20.data) || '—';
+  var invertTrend = __INVERT_TREND__;
   var varColor = '#5E8B83';
-  if (variacao.indexOf('+') >= 0) varColor = '#18C99E';
-  else if (variacao.indexOf('-') >= 0) varColor = '#D93025';
+  if (variacao.indexOf('+') >= 0) varColor = invertTrend ? '#D93025' : '#18C99E';
+  else if (variacao.indexOf('-') >= 0) varColor = invertTrend ? '#18C99E' : '#D93025';
   var dot = '<span style="display:inline-block;width:9px;height:9px;border-radius:50%;'
           + 'background:' + main.color + ';margin-right:6px;vertical-align:middle;'
           + 'box-shadow:0 0 6px ' + main.color + ';"></span>';
@@ -434,7 +435,7 @@ function(params) {
   html += '</div>';
   return html;
 }
-"""
+""".replace("__INVERT_TREND__", "true" if invert_trend else "false")
 
     return _echart_html(option, formatter_js)
 
